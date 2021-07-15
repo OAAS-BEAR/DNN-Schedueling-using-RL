@@ -8,33 +8,10 @@ from DQN import DQN
 np.random.seed(10)
 MEMORY_CAPACITY = 100
 
-'''read trace data from sqlite, the trace is downloaded from 
-https://github.com/Azure/AzurePublicDataset/blob/master/AzureTracesForPacking2020.md '''
-# import sqlite3 with sqlite3.connect('packing_trace_zone_a_v1.sqlite') as con: df = pd.read_sql_query("SELECT * FROM
-# (SELECT * FROM vm where starttime >= 0 and starttime < 1 order by random() limit 2182) order by starttime", con=con)
-
-# i=0
-# num=0
-# timeup=0
-# tmp=0
-# maxnum = np.zeros(2182)
-# for indexs in df.index:
-#     if round(df.loc[indexs].values[-2]*86400)>i:
-#         tmp =round(df.loc[indexs].values[-2]*86400)
-#         timeup = 1
-#     num = num +1
-#     if timeup == 1:
-#         for j in range(indexs):
-#             if np.isnan(df.loc[j].values[-1]*86400):
-#                 continue
-#             if round(df.loc[j].values[-1]*86400) > i and round(df.loc[j].values[-1]*86400) <=tmp:
-#                 num = num -1
-#     maxnum[indexs] = num
-#     timeup = 0
-#     i =tmp
-# print(np.max(maxnum))
-
-# df.to_csv("test5.csv")
+'''
+read trace data from sqlite, the trace is downloaded from 
+https://github.com/Azure/AzurePublicDataset/blob/master/AzureTracesForPacking2020.md
+'''
 
 '''
 training DRL
@@ -90,8 +67,8 @@ for i in range(4):
         QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         while True:
-            QoS = round(np.random.normal(QoSmax,(QoSmax-QoSmin)/3.0)) # QoS requirement
-            if (QoS >= QoSmin*1.2 and QoS <= 2*QoSmax):
+            QoS = round(np.random.normal(QoSMax, (QoSMax - QoSMin) / 3.0))  # QoS requirement
+            if QoSMin * 1.2 <= QoS <= 2 * QoSMax:
                 break
 
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
@@ -112,7 +89,7 @@ for i in range(4):
             s[4] = pCONV
             s[5] = pFC
             s[6] = pRC
-            s[7]=QoS
+            s[7] = QoS
             action = dqn.choose_action(s)
             s_ = copy.deepcopy(s)
             s_[action + 8] -= 1  # 获取新的state,即更改hardwareNumber
