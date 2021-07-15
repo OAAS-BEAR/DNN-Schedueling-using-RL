@@ -1,56 +1,67 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-import torch.nn.functional as tnf
+import torch.nn.functional as F
 import numpy as np
 
-BATCH_SIZE = 32
-LR = 0.001  # learning rate
-EPSILON = 0.9  # greedy policy
-GAMMA = 0.9  # reward discount
-TARGET_REPLACE_ITER = 20  # target update frequency
-MEMORY_CAPACITY = 100
-N_ACTIONS = 4  # number of actions
-N_STATES = 12  # dimensions of states
-
+BATCH_SIZE=32
+LR=0.001     #learning rate
+EPSILON=0.9  # greedy policy
+GAMMA=0.9    #reward discount
+TARGRT_REPLACE_ITER=20  #target update frequency
+MEMORY_CAPACITY=100
+N_ACTIONS=4     #number of actions
+N_STATES=12     #dimensions of states
 
 class Net(nn.Module):
-    def __init__(self, ):
-        super(Net, self).__init__()
-        self.fc1 = nn.Linear(N_STATES, 10)
-        self.fc1.weight.data.normal_(0, 0.1)
-        self.out = nn.Linear(10, N_ACTIONS)
-        self.out.weight.data.normal_(0, 0.1)
+    def __init__(self,):
+        super(Net,self).__init__()
+        self.fc1=nn.Linear(N_STATES,10)
+        self.fc1.weight.data.normal_(0,0.1)
+        self.out=nn.Linear(10,N_ACTIONS)
+        self.out.weight.data.normal_(0,0.1)
 
-    def forward(self, s):
-        s = self.fc1(s)
-        s = tnf.relu(s)
-        actions_value = self.out(s)
-        return actions_value  # return Q(S,A)
-
+    def forward(self,S):
+        S=self.fc1(S)
+        S=F.relu(S)
+        actions_value=self.out(S)
+        return actions_value       #return Q(S,A)
 
 class DQN(object):
     def __init__(self):
-        self.eval_net, self.target_net = Net(), Net()
-        self.learn_step_counter = 0
-        self.memory_counter = 0
-        self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))  # 初始化memory
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
-        self.loss_func = nn.MSELoss()
+        self.eval_net,self.target_net=Net(),Net()
+        self.learn_step_counter=0
+        self.memory_counter=0
+        self.memory=np.zeros((MEMORY_CAPACITY,N_STATES*2+2))   #初始化memory
+        self.optimizer=torch.optim.Adam(self.eval_net.parameters(), lr=LR)
+        self.loss_func=nn.MSELoss()
 
-    # return action
-    def choose_action(self, x):
-        x = Variable(torch.unsqueeze(torch.FloatTensor(x), 0))
-        if np.random.uniform < EPSILON:
-            actions_value = self.eval_net.forward(x)
-            action = torch.max(actions_value, 1)[1].data.numpy()[0, 0]
+
+   # return action
+    def choose_action(self,x):
+        x=Variable(torch.unsqueeze(torch.FloatTensor(x), 0))
+        if np.random.uniform() < EPSILON:
+            actions_value=self.eval_net.forward(x)
+           # print(torch.max(actions_value, 1)[1].data.numpy()[0])
+            action = torch.max(actions_value, 1)[1].data.numpy()[0]
         else:
-            action = np.random.randint(0, N_ACTIONS)
+            action= np.random.randint(0,N_ACTIONS)
         return action
+
+    def store_transition(self, s, a, r, s_):
+        #set s,a,r,s_ the arrary of 1*N
+        transition = np.hstack((s, [a, r], s_))
+        #another type of the hstack , the result is the same
+        another_result = np.hstack((s,a,r,s_))
+        # use % can loop from 0 to 2000
+        index = self.memory_counter % MEMORY_CAPACITY
+        #save the info_this_step into memory
+        self.memory[index, :] = transition
+        self.memory_counter += 1
 
     def learn(self):
         # target parameter update
-        if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
+        if self.learn_step_counter % TARGRT_REPLACE_ITER == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
         self.learn_step_counter += 1
 
@@ -70,17 +81,17 @@ class DQN(object):
 
         q_eval_test = self.eval_net(b_s_)
         # argmax axis = 0 means column , 1 means row
-        # we choose the max action value , the action is column , so axis = 1
-        q1_argmax = np.argmax(q_eval_test.data.numpy(), axis=1)
+        # we choose the max acion value , the action is column , so axis = 1
+        Q1_argmax = np.argmax(q_eval_test.data.numpy(), axis=1)
 
-        # q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagation
+        # q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
         q_next = self.target_net(b_s_)
 
         q_next_numpy = q_next.data.numpy()
 
         q_update = np.zeros((BATCH_SIZE, 1))
         for iii in range(BATCH_SIZE):
-            q_update[iii] = q_next_numpy[iii, q1_argmax[iii]]
+            q_update[iii] = q_next_numpy[iii, Q1_argmax[iii]]
 
         q_update = GAMMA * q_update
         q_update = torch.FloatTensor(q_update)
@@ -93,3 +104,6 @@ class DQN(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+
+

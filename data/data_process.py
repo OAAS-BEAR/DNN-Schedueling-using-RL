@@ -14,7 +14,7 @@ for i in range(4):
            for row in f_csv:
 
                 if j!=0:
-                    if int(row[5])<=int(row[6]):
+                    if int(row[5])<int(row[6]):
                         list=copy.deepcopy(row)
                         list2 = copy.deepcopy(row)
                         list.pop(6)

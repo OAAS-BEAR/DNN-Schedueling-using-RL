@@ -105,10 +105,11 @@ for i in range(4):
             s[0] = CPURealTimeW[DNNType]
             s[1] = CPURealTimeC[DNNType]
             s[2] = GPURealTimeW[DNNType]
-            s[4] = GPURealTimeC[DNNType]
-            s[5] = pCONV
-            s[6] = pFC
-            s[7] = pRC
+            s[3] = GPURealTimeC[DNNType]
+            s[4] = pCONV
+            s[5] = pFC
+            s[6] = pRC
+            s[7]=QoS
             action = dqn.choose_action(s)
             s_ = copy.deepcopy(s)
             s_[action + 8] -= 1  # 获取新的state,即更改hardwareNumber
