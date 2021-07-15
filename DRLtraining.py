@@ -89,7 +89,10 @@ for i in range(4):
         pRC = LayerComp[DNNType][2]
         QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
-        QoS = np.random.randint(round(QoSMin * 1.1), 2 * QoSMax)  # QoS requirement
+        while True:
+            QoS = round(np.random.normal(QoSmax,(QoSmax-QoSmin)/3.0)) # QoS requirement
+            if (QoS >= QoSmin*1.2 and QoS <= 2*QoSmax):
+                break
 
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
         '''
