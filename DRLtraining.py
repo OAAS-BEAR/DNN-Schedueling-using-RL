@@ -76,7 +76,7 @@ def act(request_id,action,state,activated_server_racks,processing_request,M,fini
     s_ = copy.deepcopy(state)
     flag=0
     for i in range(len(activated_server_racks)):
-        for j in  range(activated_server_racks[i][action]):
+        for j in  range(len(activated_server_racks[i][action])):
             if activated_server_racks[i][action][j][0]==1:
                 activated_server_racks[i][action][j][0]=0 #寻找一个机架来执行任务
                 activated_server_racks[i][action][j][1]=finish_time
