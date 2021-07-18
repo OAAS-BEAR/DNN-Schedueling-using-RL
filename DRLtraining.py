@@ -1,4 +1,5 @@
 import copy
+import math
 
 import numpy as np
 import pandas as pd
@@ -49,6 +50,17 @@ s[11] = hardwareNumber[3]
 processing_request = {}  # 正在处理的requests      request_id->action
 dqn = DQN()
 episode = 0
+
+
+def greedy_reward(computing_time, energy_consumption, finish_time, start_time, qos, idle_power, gama, alpha, beta):
+    request_num = math.ceil((finish_time - start_time) / qos)
+    e_self_it = (energy_consumption + idle_power * (qos - computing_time)) * request_num
+    e_self_cooling = gama * e_self_it
+    q = math.log(1 + math.exp(100 * (computing_time - qos) / qos))
+    g_reward = -alpha * (e_self_it + e_self_cooling) - beta * q
+    return g_reward
+
+
 for i in range(4):
     df = pd.read_csv("./data/test_" + str(i + 1) + ".csv")
     print(df.shape)
@@ -93,10 +105,17 @@ for i in range(4):
             action = dqn.choose_action(s)
             s_ = copy.deepcopy(s)
             s_[action + 8] -= 1  # 获取新的state,即更改hardwareNumber
-            reward = 0
+            # reward = 0
             '''
             获取reward的代码
             '''
+            energy = [CPUEnergyW[DNNType], CPUEnergyC[DNNType], GPUEnergyW[DNNType], GPUEnergyC[DNNType]]
+            ph_idle = 0
+            gama = 1    # gama = CoolingEnergy / ITEnergy
+            alpha = 1
+            beta = 1
+            reward = greedy_reward(s[action], energy[action], flag, inTime, QoS, ph_idle, gama, alpha, beta)
+
             processing_request[request_id] = action  # 添加到正在处理的请求中
             dqn.store_transition(s, action, reward, s_)
             if dqn.memory_counter > MEMORY_CAPACITY:
