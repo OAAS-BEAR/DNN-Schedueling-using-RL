@@ -5,7 +5,7 @@ from queue import PriorityQueue
 for i in range(4):
     with open("test_"+str(i+1)+".csv",'w') as f1:
         f1_csv = csv.writer(f1)
-        f1_csv.writerow(['','vmId','tenantId','vmTypeId','priority','time','flag'])
+        f1_csv.writerow(['','vmId','tenantId','vmTypeId','priority','time','flag','during_time'])
 
 
         with open("test"+str(i+1)+".csv",'r') as f:
@@ -19,9 +19,11 @@ for i in range(4):
                         list2 = copy.deepcopy(row)
                         list.pop(6)
                         list.append(1)
+                        list.append(int(row[6]) - int(row[5]))
                         f1_csv.writerow(list)
                         list2.pop(5)
                         list2.append(0)
+                        list2.append(int(row[6]) - int(row[5]))
 
                         f1_csv.writerow(list2)
                 j=j+1
@@ -43,7 +45,7 @@ for i in range(4):
 
     with open("test_"+str(i+1)+".csv",'w') as f1:
         f1_csv = csv.writer(f1)
-        f1_csv.writerow(['','vmId','tenantId','vmTypeId','priority','time','flag'])
+        f1_csv.writerow(['','vmId','tenantId','vmTypeId','priority','time','flag','during_time'])
         while not customers.empty():
             f1_csv.writerow(customers.get()[1])
 
