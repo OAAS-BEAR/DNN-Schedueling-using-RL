@@ -5,21 +5,21 @@ import torch.nn.functional as tnf
 import numpy as np
 
 BATCH_SIZE = 32
-LR = 0.001  # learning rate
+LR = 0.9  # learning rate
 EPSILON = 0.9  # greedy policy
-GAMMA = 0.9  # reward discount
+GAMMA = 0.5  # reward discount
 TARGET_REPLACE_ITER = 20  # target update frequency
 MEMORY_CAPACITY = 100
 N_ACTIONS = 4  # number of actions
-N_STATES = 12  # dimensions of states
+N_STATES = 14  # dimensions of states
 
 
 class Net(nn.Module):
     def __init__(self, ):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(N_STATES, 10)
+        self.fc1 = nn.Linear(N_STATES, 32)
         self.fc1.weight.data.normal_(0, 0.1)
-        self.out = nn.Linear(10, N_ACTIONS)
+        self.out = nn.Linear(16, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)
 
     def forward(self, s):
