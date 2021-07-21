@@ -197,7 +197,7 @@ for i in range(episode):
             if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
                 break
             else:
-                QoS = np.random.randint(QoSMin - 1, QoSMax + 1)
+                QoS = (QoSMin + QoSMax) / 2
                 break
 
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
@@ -243,8 +243,10 @@ for i in range(episode):
                                 e_consumption, outTime, inTime, QoS)
             dqn.store_transition(s, action, reward, s_)
             if dqn.memory_counter > MEMORY_CAPACITY:
-                dqn.learn()
-
+                loss=dqn.learn()
+                if indexes%100==0:
+                    print('reward '+str(reward))
+                    print('epcoh ' + str(i) + ' step ' + str(indexes) + ' : ' + ' , LOSS =' + str(loss.item()))
             s = s_  # 更新state
     
     for request_id in processing_request:
