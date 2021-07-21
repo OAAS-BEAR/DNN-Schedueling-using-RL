@@ -26,10 +26,10 @@ CPURealTimeW = [99.118, 194.185, 279.248, 192.070, 229.745, 457.346, 1002.424, 2
 CPURealTimeC = [97.433, 192.931, 276.896, 188.478, 227.395, 451.082, 898.043, 176.990, 214.053, 226.121, 43.751, 5.650]  # the computing time on the CPU in the cold water area
 GPURealTimeW = [37.001, 57.690, 86.847, 73.057, 88.970, 124.025, 201.542, 27.709, 49.020, 48.426, 11.849, 14.269]  # the computing time on the GPU in the warm water area
 GPURealTimeC = [33.925, 51.543, 71.645, 64.489, 82.196, 108.451, 182.225, 22.258, 41.965, 46.916, 9.727, 14.012]  # the computing time on the GPU in the cold water area
-CPUEnergyW = [0.131792, 0.172838, 3.358263, 6.087482, 22.399716, 55.661474, 3.783046, 7.410854, 11.448653, 13.616554, 2.933875, 13.659423, 14.699843]  # the energy consumption on the CPU in the warm water area
-CPUEnergyC = [0.096723, 0.173660, 3.526470, 6.404073, 22.662359, 60.390433, 4.773400, 7.610336, 11.644470, 21.718584, 3.466390, 19.707590, 19.173406]  # the energy consumption on the CPU in the cold water area
-GPUEnergyW = [0.502684, 0.704312, 4.568294, 4.835835, 11.677043, 17.403119, 2.295332, 4.123370, 5.926774, 2.975435, 1.035881, 4.318102, 4.804274]  # the energy consumption on the GPU in the warm water area
-GPUEnergyC = [0.526268, 0.769025, 4.895413, 7.677700, 13.749655, 28.195316, 2.123373, 3.736929, 5.562906, 4.245887, 1.189686, 6.099269, 6.102731]  # the energy consumption on the GPU in the cold water area
+CPUEnergyW = [6.161884, 12.071303, 18.150614, 7.967937, 11.601355, 33.376023, 79.719643, 19.230621, 19.678410, 20.852059, 4.029731, 0.311649]  # the energy consumption on the CPU in the warm water area
+CPUEnergyC = [7.111787, 12.240676, 18.289973, 8.049952, 11.861565, 33.488322, 81.943463, 25.966349, 24.844868, 24.600319, 4.516407, 0.309255]  # the energy consumption on the CPU in the cold water area
+GPUEnergyW = [2.665347, 4.700274, 6.795247, 5.298865, 5.725534, 12.917292, 19.418534, 3.252527, 4.808302, 5.288533, 1.154375, 0.847006]  # the energy consumption on the GPU in the warm water area
+GPUEnergyC = [2.462627, 4.252362, 6.279354, 5.540303, 8.499656, 14.834170, 30.017568, 4.468464, 6.518914, 6.571887, 1.286960, 0.909147]  # the energy consumption on the GPU in the cold water area
 
 LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0.000], [0.502, 0.006, 0.003, 0.489, 0.000], [0.550, 0.115, 0.005, 0.330, 0.000], 
              [0.551, 0.114, 0.004, 0.331, 0.000], [0.553, 0.114, 0.003, 0.330, 0.000], [0.554, 0.114, 0.002, 0.331, 0.000], [0.857, 0.143, 0.000, 0.000, 0.000], 
@@ -152,11 +152,11 @@ for i in range(episode):
     print(df.dtypes)
     print(df.index)
     for indexes in df.index:
-        timeline += 1  # episode 自增
         request_id = df.loc[indexes].values[0]  # 请求的id
-        userType = df.loc[indexes].values[1] % 20  # user number, there are 20 users in total
-        DNNType = df.loc[indexes].values[2] % 20  # DNN model number, there are 20 DNN models in total
+        userType = df.loc[indexes].values[1] % 12  # user number, there are 12 users in total
+        DNNType = df.loc[indexes].values[2] % 12  # DNN model number, there are 12 DNN models in total
         inTime = df.loc[indexes].values[-3]  # request starts
+        timeline = inTime  # timeline 增加
         flag = df.loc[indexes].values[-2]  # request begin or end
         pCONV = LayerComp[DNNType][0]
         pPOOL = LayerComp[DNNType][1]
@@ -167,8 +167,8 @@ for i in range(episode):
         QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         while True:
-            QoS = round(np.random.normal(QoSMax, (QoSMax - QoSMin) / 3.0))  # QoS requirement
-            if QoSMin * 1.2 <= QoS <= 2 * QoSMax:
+            QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax)/2.0, (1.5 * QoSMax - QoSMin * 1.2) / 6.0))  # QoS requirement
+            if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
                 break
             else:
                 QoS = np.random.randint(QoSMin - 1, QoSMax + 1)
