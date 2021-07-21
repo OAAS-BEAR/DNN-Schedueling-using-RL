@@ -22,18 +22,30 @@ training DRL
 # ResNetV1-50, ResNetV1-101, ResNetV1-152, EfficientNet-B1, EfficientNet-B3, EfficientNet-B5,
 # EfficientNet-B7, Unet, YoloV3-416, YoloV3-spp, YoloV3-tiny, and NER
 
-CPURealTimeW = [99.118, 194.185, 279.248, 192.070, 229.745, 457.346, 1002.424, 233.919, 250.791, 256.342, 45.661, 5.784]  # the computing time on the CPU in the warm water area
-CPURealTimeC = [97.433, 192.931, 276.896, 188.478, 227.395, 451.082, 898.043, 176.990, 214.053, 226.121, 43.751, 5.650]  # the computing time on the CPU in the cold water area
-GPURealTimeW = [37.001, 57.690, 86.847, 73.057, 88.970, 124.025, 201.542, 27.709, 49.020, 48.426, 11.849, 14.269]  # the computing time on the GPU in the warm water area
-GPURealTimeC = [33.925, 51.543, 71.645, 64.489, 82.196, 108.451, 182.225, 22.258, 41.965, 46.916, 9.727, 14.012]  # the computing time on the GPU in the cold water area
-CPUEnergyW = [6.161884, 12.071303, 18.150614, 7.967937, 11.601355, 33.376023, 79.719643, 19.230621, 19.678410, 20.852059, 4.029731, 0.311649]  # the energy consumption on the CPU in the warm water area
-CPUEnergyC = [7.111787, 12.240676, 18.289973, 8.049952, 11.861565, 33.488322, 81.943463, 25.966349, 24.844868, 24.600319, 4.516407, 0.309255]  # the energy consumption on the CPU in the cold water area
-GPUEnergyW = [2.665347, 4.700274, 6.795247, 5.298865, 5.725534, 12.917292, 19.418534, 3.252527, 4.808302, 5.288533, 1.154375, 0.847006]  # the energy consumption on the GPU in the warm water area
-GPUEnergyC = [2.462627, 4.252362, 6.279354, 5.540303, 8.499656, 14.834170, 30.017568, 4.468464, 6.518914, 6.571887, 1.286960, 0.909147]  # the energy consumption on the GPU in the cold water area
+CPURealTimeW = [99.118, 194.185, 279.248, 192.070, 229.745, 457.346, 1002.424, 233.919, 250.791, 256.342, 45.661,
+                5.784]  # the computing time on the CPU in the warm water area
+CPURealTimeC = [97.433, 192.931, 276.896, 188.478, 227.395, 451.082, 898.043, 176.990, 214.053, 226.121, 43.751,
+                5.650]  # the computing time on the CPU in the cold water area
+GPURealTimeW = [37.001, 57.690, 86.847, 73.057, 88.970, 124.025, 201.542, 27.709, 49.020, 48.426, 11.849,
+                14.269]  # the computing time on the GPU in the warm water area
+GPURealTimeC = [33.925, 51.543, 71.645, 64.489, 82.196, 108.451, 182.225, 22.258, 41.965, 46.916, 9.727,
+                14.012]  # the computing time on the GPU in the cold water area
+CPUEnergyW = [6.161884, 12.071303, 18.150614, 7.967937, 11.601355, 33.376023, 79.719643, 19.230621, 19.678410,
+              20.852059, 4.029731, 0.311649]  # the energy consumption on the CPU in the warm water area
+CPUEnergyC = [7.111787, 12.240676, 18.289973, 8.049952, 11.861565, 33.488322, 81.943463, 25.966349, 24.844868,
+              24.600319, 4.516407, 0.309255]  # the energy consumption on the CPU in the cold water area
+GPUEnergyW = [2.665347, 4.700274, 6.795247, 5.298865, 5.725534, 12.917292, 19.418534, 3.252527, 4.808302, 5.288533,
+              1.154375, 0.847006]  # the energy consumption on the GPU in the warm water area
+GPUEnergyC = [2.462627, 4.252362, 6.279354, 5.540303, 8.499656, 14.834170, 30.017568, 4.468464, 6.518914, 6.571887,
+              1.286960, 0.909147]  # the energy consumption on the GPU in the cold water area
 
-LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0.000], [0.502, 0.006, 0.003, 0.489, 0.000], [0.550, 0.115, 0.005, 0.330, 0.000], 
-             [0.551, 0.114, 0.004, 0.331, 0.000], [0.553, 0.114, 0.003, 0.330, 0.000], [0.554, 0.114, 0.002, 0.331, 0.000], [0.857, 0.143, 0.000, 0.000, 0.000], 
-             [0.510, 0.000, 0.000, 0.490, 0.000], [0.500, 0.020, 0.000, 0.480, 0.000], [0.433, 0.200, 0.000, 0.367, 0.000], [0.000, 0.000, 0.500, 0.000, 0.500]]  # percentage of CONV, POOL, FC, Batch, and RC layers in each DNN model
+# percentage of CONV, POOL, FC, Batch, and RC layers in each DNN model
+LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0.000],
+             [0.502, 0.006, 0.003, 0.489, 0.000], [0.550, 0.115, 0.005, 0.330, 0.000],
+             [0.551, 0.114, 0.004, 0.331, 0.000], [0.553, 0.114, 0.003, 0.330, 0.000],
+             [0.554, 0.114, 0.002, 0.331, 0.000], [0.857, 0.143, 0.000, 0.000, 0.000],
+             [0.510, 0.000, 0.000, 0.490, 0.000], [0.500, 0.020, 0.000, 0.480, 0.000],
+             [0.433, 0.200, 0.000, 0.367, 0.000], [0.000, 0.000, 0.500, 0.000, 0.500]]
 
 M = [10, 10, 20, 20]  # number of hardware of each server rack
 hardwareNumber = [0, 0, 0, 0]  # the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
@@ -48,10 +60,12 @@ dqn = DQN()
 episode = 4
 timeline = 0
 
-idle_power = [24,24,10,10]
-gama = [0.01,0.26,0.01,0.26]  # gama = CoolingEnergy / ITEnergy
+idle_power = [24, 24, 10, 10]
+gama = [0.01, 0.26, 0.01, 0.26]  # gama = CoolingEnergy / ITEnergy
 alpha = 0.001
 beta = 0.05
+
+c_action = 0
 
 
 # 新激活一个server rack
@@ -101,8 +115,8 @@ def release_hardware(request_id, activated_server_racks, state, processing_reque
 
 def greedy_reward(computing_time, energy_consumption, finish_time, start_time, qos):
     request_num = math.ceil((finish_time - start_time) / qos)
-    e_self_it = (energy_consumption + idle_power * (qos - computing_time)) * request_num
-    e_self_cooling = gama * e_self_it
+    e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num
+    e_self_cooling = gama[c_action] * e_self_it
     q = math.log(1 + math.exp(100 * (computing_time - qos) / qos))
     g_reward = -alpha * (e_self_it + e_self_cooling) - beta * q
     return g_reward
@@ -112,8 +126,8 @@ def greedy_reward(computing_time, energy_consumption, finish_time, start_time, q
 def get_reward(activated_server_racks, processing_request, request_id, computing_time, energy_consumption, finish_time,
                start_time, qos):
     request_num = math.ceil((finish_time - start_time) / qos)
-    e_self_it = (energy_consumption + idle_power * (qos - computing_time)) * request_num
-    e_self_cooling = gama * e_self_it
+    e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num
+    e_self_cooling = gama[c_action] * e_self_it
     rack_id = processing_request[request_id][1]
     this_hardware_id = processing_request[request_id][2]
     this_action = processing_request[request_id][0]
@@ -140,7 +154,7 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
                 x = 0
             e_other_it += (M[h] - x) * time
 
-    e_other_cooling = gama * e_other_it
+    e_other_cooling = gama[c_action] * e_other_it
     q = math.log(1 + math.exp(100 * (computing_time - qos) / qos))
     g_reward = -alpha * (e_self_it + e_self_cooling + e_other_cooling + e_other_it) - beta * q
     return g_reward
@@ -167,7 +181,8 @@ for i in range(episode):
         QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         while True:
-            QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax)/2.0, (1.5 * QoSMax - QoSMin * 1.2) / 6.0))  # QoS requirement
+            QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
+                                         (1.5 * QoSMax - QoSMin * 1.2) / 6.0))  # QoS requirement
             if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
                 break
             else:
@@ -192,6 +207,7 @@ for i in range(episode):
             s[8] = pRC
             s[9] = QoS
             action = dqn.choose_action(s)
+            c_action = action
             outTime = df.loc[indexes].values[-3] + df.loc[indexes].values[-1]
 
             # 获取新的state,即更改hardwareNumber
