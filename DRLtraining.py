@@ -50,8 +50,8 @@ timeline = 0
 
 idle_power = [26,26,10,10]
 gama = [0.01,0.26,0.01,0.26]  # gama = CoolingEnergy / ITEnergy
-alpha = 0.1
-beta = 5
+alpha = 0.001
+beta = 0.05
 
 
 # 新激活一个server rack
