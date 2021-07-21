@@ -48,7 +48,7 @@ dqn = DQN()
 episode = 4
 timeline = 0
 
-idle_power = [26,26,10,10]
+idle_power = [24,24,10,10]
 gama = [0.01,0.26,0.01,0.26]  # gama = CoolingEnergy / ITEnergy
 alpha = 0.001
 beta = 0.05
