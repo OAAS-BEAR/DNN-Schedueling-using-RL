@@ -5,7 +5,7 @@ import torch.nn.functional as tnf
 import numpy as np
 
 BATCH_SIZE = 32
-LR = 0.9 # learning rate
+LR = 0.9  # learning rate
 EPSILON = 0.9  # greedy policy
 GAMMA = 0.5  # reward discount
 TARGET_REPLACE_ITER = 20  # target update frequency
@@ -19,11 +19,15 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.fc1 = nn.Linear(N_STATES, 32)
         self.fc1.weight.data.normal_(0, 0.1)
-        self.out = nn.Linear(32, N_ACTIONS)
+        self.fc2 = nn.Linear(32, 16)
+        self.fc2.weight.data.normal_(0, 0.1)
+        self.out = nn.Linear(16, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)
 
     def forward(self, s):
         s = self.fc1(s)
+        s = tnf.relu(s)
+        s = self.fc2(s)
         s = tnf.relu(s)
         actions_value = self.out(s)
         return actions_value  # return Q(S,A)
@@ -101,10 +105,7 @@ class DQN(object):
         q_target = b_r + variable11
         # q_target = b_r + GAMMA * q_next.max(1)[0]   # shape (batch, 1)
         loss = self.loss_func(q_eval, q_target)
-        #if  self.learn_step_counter%100==0:
-            #print(q_eval)
-            #print(q_eval-q_target)
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        return loss
