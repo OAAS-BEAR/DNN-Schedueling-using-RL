@@ -3,7 +3,6 @@ import math
 
 import numpy as np
 import pandas as pd
-from sqlalchemy.sql.expression import false, true
 
 # np.random.seed(10)
 MEMORY_CAPACITY = 100
@@ -44,7 +43,6 @@ LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0
 
 M = [10, 10, 20, 20]  # number of hardware in each server rack, CPU-W,CPU-C,GPU-W,GPU-C
 
-dqn = DQN()
 episode = 80
 
 idle_power = [24, 24, 10, 10]
@@ -55,7 +53,7 @@ beta = 0.05
 
 # 新激活一个server rack
 def activate_server_rack(activated_server_racks, M, state, action):
-    new_server_rack = []  # 新开辟的server_rack
+    new_server_rack = [[],[],[],[]]  # 新开辟的server_rack
     for x in range(4):
         for ii in range(M[x]):
             new_server_rack[x].append([1, 0.0])  # list里每一项对应一个硬件状态(idle是否为真，finish_time)
@@ -80,7 +78,7 @@ def act(request_id, action, state, activated_server_racks, processing_request, M
                 activated_server_racks[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
                 activated_server_racks[str(action)][x][j][1] = finish_time
                 s_new[action + 10] -= 1  # 更新总的空闲硬件数目硬件
-                processing_request[request_id] = (action, x, j, finish_time)  # 添加任务信息到processing_request
+                processing_request[request_id] = [action, x, j, finish_time]  # 添加任务信息到processing_request
                 return s_new
     # 没有空余硬件可用，需要新激活一个server rack
     activate_server_rack(activated_server_racks, M, s_new, action)
@@ -89,7 +87,7 @@ def act(request_id, action, state, activated_server_racks, processing_request, M
     activated_server_racks[str(action)][rack_id][0][0] = 0
     activated_server_racks[str(action)][rack_id][0][1] = finish_time
     s_new[action + 10] -= 1
-    processing_request[request_id] = (action, rack_id, 0, finish_time)
+    processing_request[request_id] = [action, rack_id, 0, finish_time]
     return s_new
 
 
@@ -114,20 +112,20 @@ def greedy_reward(computing_time, action,energy_consumption, finish_time, start_
     activated_server_rackstmp = copy.deepcopy(activated_server_racks)
     processing_requesttmp = copy.deepcopy(processing_request)
     
-    exit_flag = false
+    exit_flag = False
     for x in range(len(activated_server_rackstmp[str(action)])): # 机架
         for j in range(len(activated_server_rackstmp[str(action)][x])): # 硬件
             if activated_server_rackstmp[str(action)][x][j][0] == 1:
                 activated_server_rackstmp[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
                 activated_server_rackstmp[str(action)][x][j][1] = finish_time
-                processing_requesttmp[request_id] = (action, x, j, finish_time)  # 添加任务信息到processing_request
-                exit_flag = true
+                processing_requesttmp[request_id] = [action, x, j, finish_time]  # 添加任务信息到processing_request
+                exit_flag = True
                 break
         if exit_flag:
             break
     # 没有空余硬件可用，需要新激活一个server rack
-    if exit_flag is false:
-        new_server_rack = []  # 新开辟的server_rack
+    if exit_flag is False:
+        new_server_rack = [[],[],[],[]]  # 新开辟的server_rack
         for x in range(4):
             for ii in range(M[x]):
                 new_server_rack[x].append([1, 0.0])  # list里每一项对应一个硬件状态(idle是否为真，finish_time)
@@ -141,7 +139,7 @@ def greedy_reward(computing_time, action,energy_consumption, finish_time, start_
         rack_id = len(activated_server_rackstmp[str(action)]) - 1
         activated_server_rackstmp[str(action)][rack_id][0][0] = 0
         activated_server_rackstmp[str(action)][rack_id][0][1] = finish_time
-        processing_requesttmp[request_id] = (action, rack_id, 0, finish_time)
+        processing_requesttmp[request_id] = [action, rack_id, 0, finish_time]
     
     '''
     计算4种能耗值
@@ -184,12 +182,12 @@ def greedy_reward(computing_time, action,energy_consumption, finish_time, start_
     g_reward = -alpha * (e_self_it + e_self_cooling + e_other_cooling + e_other_it)
     return g_reward
 
-def request_add_item(computing_time, energy_consumption, finish_time, start_time, qos):
+def request_add_item(request_id, computing_time, energy_consumption, finish_time, start_time, qos):
     '''
     确定采取某动作后，计算自身的IT和cooling能耗，更新processing_request
     '''
     c_action = processing_request[request_id][0]
-    assert(computing_time>qos)
+    assert(computing_time<=qos)
     request_num = math.floor((finish_time - start_time) / qos)
     e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (finish_time - start_time - qos * request_num)*idle_power[c_action]
     e_self_cooling = gama[c_action] * e_self_it
@@ -206,16 +204,16 @@ for i in range(episode):
     E_Cooling = 0
     timeline = 0
 
-    df = pd.read_csv("./data/test_" + str(i) + ".csv")
-    print(df.shape)
-    print(df.dtypes)
-    print(df.index)
+    df = pd.read_csv("./data-4363/test_" + str(i) + ".csv")
+    # print(df.shape)
+    # print(df.dtypes)
+    # print(df.index)
     for indexes in df.index:
-        request_id = df.loc[indexes].values[0]  # 请求的id
-        userType = df.loc[indexes].values[1] % 12  # user number, there are 12 users in total
-        DNNType = df.loc[indexes].values[2] % 12  # DNN model number, there are 12 DNN models in total
-        inTime = df.loc[indexes].values[-3]  # request starts
-        flag = df.loc[indexes].values[-2]  # request begin or end
+        request_id = int(df.loc[indexes].values[0])  # 请求的id
+        userType = int(df.loc[indexes].values[1] % 12)  # user number, there are 12 users in total
+        DNNType = int(df.loc[indexes].values[2] % 12 ) # DNN model number, there are 12 DNN models in total
+        inTime = df.loc[indexes].values[-3] # request starts
+        flag = int(df.loc[indexes].values[-2])  # request begin or end
         pCONV = LayerComp[DNNType][0]
         pPOOL = LayerComp[DNNType][1]
         pFC = LayerComp[DNNType][2]
@@ -224,15 +222,13 @@ for i in range(episode):
 
         QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
+        
         while True:
             QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
-                                         (1.5 * QoSMax - QoSMin * 1.2) / 6.0))  # QoS requirement
+                                         (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
             if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
                 break
-            else:
-                QoS = (QoSMin + QoSMax) / 2
-                break
-
+        
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
         '''
         DRL code here
@@ -268,11 +264,15 @@ for i in range(episode):
                 reward = greedy_reward(c_time,action,
                                 e_consumption, outTime, inTime, QoS)
                 rewards.append(reward)
+            
             action=rewards.index(max(rewards))
-            request_add_item(c_time,e_consumption, outTime, inTime, QoS)
+            
+            c_time = s[action]
+            e_consumption = energy[action]
             # 获取新的state,即更改hardwareNumber
             s_ = act(request_id, action, s, activated_server_racks, processing_request, M, outTime)
-
+            request_add_item(request_id, c_time,e_consumption, outTime, inTime, QoS)
+            
             s = s_  # 更新state
     
     for request_id in processing_request:
