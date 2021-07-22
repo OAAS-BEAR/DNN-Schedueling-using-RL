@@ -2,13 +2,13 @@ import csv
 import copy
 from queue import PriorityQueue
 
-for i in range(20):
-    with open("val_"+str(i)+".csv",'w') as f1:
+for i in range(80):
+    with open("test_"+str(i)+".csv",'w') as f1:
         f1_csv = csv.writer(f1)
         f1_csv.writerow(['','vmId','tenantId','vmTypeId','priority','time','flag','during_time'])
 
 
-        with open("val"+str(i)+".csv",'r') as f:
+        with open("test"+str(i)+".csv",'r') as f:
            f_csv=csv.reader(f)
            j=0
            for row in f_csv:
@@ -32,9 +32,9 @@ for i in range(20):
                 j=j+1
 
 
-for i in range(20):
+for i in range(80):
     customers = PriorityQueue()
-    with open("val_" + str(i) + ".csv", 'r') as f:
+    with open("test_" + str(i) + ".csv", 'r') as f:
 
         f_csv = csv.reader(f)
         j = 0
@@ -47,7 +47,7 @@ for i in range(20):
                 customers.put(((prio1,prio2),row))
             j=j+1
 
-    with open("val_"+str(i)+".csv",'w') as f1:
+    with open("test_"+str(i)+".csv",'w') as f1:
         f1_csv = csv.writer(f1)
         f1_csv.writerow(['','vmId','tenantId','vmTypeId','priority','time','flag','during_time'])
         while not customers.empty():

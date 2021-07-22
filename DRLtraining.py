@@ -60,7 +60,7 @@ beta = 0.05
 
 # 新激活一个server rack
 def activate_server_rack(activated_server_racks, M, state, action):
-    new_server_rack = []  # 新开辟的server_rack
+    new_server_rack = [[],[],[],[]]  # 新开辟的server_rack
     for x in range(4):
         for ii in range(M[x]):
             new_server_rack[x].append([1, 0.0])  # list里每一项对应一个硬件状态(idle是否为真，finish_time)
@@ -85,7 +85,7 @@ def act(request_id, action, state, activated_server_racks, processing_request, M
                 activated_server_racks[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
                 activated_server_racks[str(action)][x][j][1] = finish_time
                 s_new[action + 10] -= 1  # 更新总的空闲硬件数目硬件
-                processing_request[request_id] = (action, x, j, finish_time)  # 添加任务信息到processing_request
+                processing_request[request_id] = [action, x, j, finish_time] # 添加任务信息到processing_request
                 return s_new
     # 没有空余硬件可用，需要新激活一个server rack
     activate_server_rack(activated_server_racks, M, s_new, action)
@@ -94,7 +94,7 @@ def act(request_id, action, state, activated_server_racks, processing_request, M
     activated_server_racks[str(action)][rack_id][0][0] = 0
     activated_server_racks[str(action)][rack_id][0][1] = finish_time
     s_new[action + 10] -= 1
-    processing_request[request_id] = (action, rack_id, 0, finish_time)
+    processing_request[request_id] = [action, rack_id, 0, finish_time]
     return s_new
 
 
@@ -131,8 +131,8 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
     this_hardware_id = processing_request[request_id][2]
     this_action = processing_request[request_id][0]
 
-    processing_request[request_id].extend(e_self_it, e_self_cooling, start_time, computing_time, qos,
-                                          energy_consumption)  # 便于计算系统总能耗开销
+    processing_request[request_id].extend([e_self_it, e_self_cooling, start_time, computing_time, qos,
+                                          energy_consumption])  # 便于计算系统总能耗开销
     max_finish = 0
 
     # 计算max finish time
@@ -171,16 +171,16 @@ for i in range(episode):
     E_Cooling = 0
     timeline = 0
 
-    df = pd.read_csv("./data/test_" + str(i) + ".csv")
+    df = pd.read_csv("./data-4363/test_" + str(i) + ".csv")
     print(df.shape)
     print(df.dtypes)
     print(df.index)
     for indexes in df.index:
-        request_id = df.loc[indexes].values[0]  # 请求的id
-        userType = df.loc[indexes].values[1] % 12  # user number, there are 12 users in total
-        DNNType = df.loc[indexes].values[2] % 12  # DNN model number, there are 12 DNN models in total
-        inTime = df.loc[indexes].values[-3]  # request starts
-        flag = df.loc[indexes].values[-2]  # request begin or end
+        request_id = int(df.loc[indexes].values[0])  # 请求的id
+        userType = int(df.loc[indexes].values[1] % 12)  # user number, there are 12 users in total
+        DNNType = int(df.loc[indexes].values[2] % 12 ) # DNN model number, there are 12 DNN models in total
+        inTime = df.loc[indexes].values[-3] # request starts
+        flag = int(df.loc[indexes].values[-2])  # request begin or end
         pCONV = LayerComp[DNNType][0]
         pPOOL = LayerComp[DNNType][1]
         pFC = LayerComp[DNNType][2]
@@ -245,7 +245,6 @@ for i in range(episode):
                 loss = dqn.learn()
                 if indexes % 100 == 0:
                     print('reward ' + str(reward))
-                    print('epcoh ' + str(i) + ' step ' + str(indexes) + ' : ' + ' , LOSS =' + str(loss.item()))
             s = s_  # 更新state
 
     for request_id in processing_request:
