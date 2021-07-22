@@ -44,16 +44,9 @@ LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0
              [0.433, 0.200, 0.000, 0.367, 0.000], [0.000, 0.000, 0.500, 0.000, 0.500]]
 
 M = [10, 10, 20, 20]  # number of hardware in each server rack, CPU-W,CPU-C,GPU-W,GPU-C
-activated_server_racks = {'0':[],'1':[],'2':[],'3':[]}  # 记录已经激活的server rack里硬件的信息
-s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # state, the last four numbers are the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
-processing_request = {}  # 正在处理的requests      request_id->(action,rack_id,hardware_id)
-QoS_satisfy = []
-E_IT = 0
-E_Cooling = 0
 
 dqn = DQN()
 episode = 4
-timeline = 0
 
 idle_power = [24, 24, 10, 10]
 gama = [0.01, 0.26, 0.01, 0.26]  # gama = CoolingEnergy / ITEnergy
@@ -72,13 +65,11 @@ def activate_server_rack(activated_server_racks, M, state, action):
         activated_server_racks['2'].append(new_server_rack[2])  # 设置单个rack里的硬件信息
         state[10] += M[0]  # 更新总的空闲硬件数量
         state[12] += M[2]  # 更新总的空闲硬件数量
-    elif action == 1 or action == 3:
+    else:
         activated_server_racks['1'].append(new_server_rack[1])
         activated_server_racks['3'].append(new_server_rack[3])
         state[11] += M[1]
         state[13] += M[3]
-    else:
-        print('======Wrong action!======')
 
 
 # 执行action
@@ -113,18 +104,9 @@ def release_hardware(request_id, activated_server_racks, state, processing_reque
     state[action + 10] += 1  # 更新总的空闲硬件数目硬件
     E1 = processing_request[request_id][4]
     E2 = processing_request[request_id][5]
-    Q = (processing_request[request_id][7]-processing_request[request_id][8])/processing_request[request_id][8]
+    Q = processing_request[request_id]
     processing_request.pop(request_id)
     return E1,E2,Q
-
-
-# def greedy_reward(computing_time, energy_consumption, finish_time, start_time, qos):
-#     request_num = math.ceil((finish_time - start_time) / qos)
-#     e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num
-#     e_self_cooling = gama[c_action] * e_self_it
-#     q = math.log(1 + math.exp(100 * (computing_time - qos) / qos))
-#     g_reward = -alpha * (e_self_it + e_self_cooling) - beta * q
-#     return g_reward
 
 
 # reward function using DRL
@@ -173,7 +155,15 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
 
 
 for i in range(episode):
-    df = pd.read_csv("./data/test_" + str(i + 1) + ".csv")
+    activated_server_racks = {'0':[],'1':[],'2':[],'3':[]}  # 记录已经激活的server rack里硬件的信息
+    s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # state, the last four numbers are the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
+    processing_request = {}  # 正在处理的requests      request_id->(action,rack_id,hardware_id)
+    QoS_satisfy = []
+    E_IT = 0
+    E_Cooling = 0
+    timeline = 0
+
+    df = pd.read_csv("./data/test_" + str(i) + ".csv")
     print(df.shape)
     print(df.dtypes)
     print(df.index)
@@ -214,7 +204,7 @@ for i in range(episode):
             E1, E2, Q = release_hardware(request_id, activated_server_racks, s, processing_request)
             E_IT += E1
             E_Cooling += E2
-            QoS_satisfy.extend(Q)
+            QoS_satisfy.append(Q)
         else:  # 某一请求开始，更改state，然后run DQN
             s[0] = CPURealTimeW[DNNType]
             s[1] = CPURealTimeC[DNNType]
@@ -268,14 +258,18 @@ for i in range(episode):
 
         E_IT += e_self_it
         E_Cooling += e_self_cooling
-        QoS_satisfy.extend(Q)
+        QoS_satisfy.append(processing_request[request_id])
 
         # 训练过程中记录loss曲线
     
-    print(E_IT,E_Cooling)
-    #QoS_satisfy写入文件
+    print('==============',E_IT,E_Cooling,'==============')
+    
+    #QoS_satisfy to file
+    QoSsatisfy = pd.DataFrame(columns=['action', 'rack_id', 'hardware_id', 'finish_time', 'e_self_it', 'e_self_cooling', 'start_time', \
+                 'computing_time','qos', 'energy_consumption'], data=QoS_satisfy)
+    QoSsatisfy.to_csv("./result/QoS_" + str(i) + ".csv", index=False)
 
-# processing_request: action, rack_id, hardware_id, finish_time, e_self_it, e_self_cooling, start_time, computing_time, qos, energy_consumption
+    # processing_request: action, rack_id, hardware_id, finish_time, e_self_it, e_self_cooling, start_time, computing_time, qos, energy_consumption
 
 '''
 testing DRL
