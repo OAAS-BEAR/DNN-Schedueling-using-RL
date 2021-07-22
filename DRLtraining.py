@@ -50,12 +50,12 @@ LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0
 M = [10, 10, 20, 20]  # number of hardware in each server rack, CPU-W,CPU-C,GPU-W,GPU-C
 
 dqn = DQN()
-episode = 4
+episode = 80
 
 idle_power = [24, 24, 10, 10]
 gama = [0.01, 0.26, 0.01, 0.26]  # gama = CoolingEnergy / ITEnergy
-alpha = 0.001
-beta = 0.05
+alpha = 0.01
+beta = 0.1
 
 
 # 新激活一个server rack
@@ -156,8 +156,9 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
         e_other_it += (M[h] - x) * time * idle_power[h]
 
     e_other_cooling = gama[c_action] * e_other_it
-    q = math.log(1 + math.exp(100 * (computing_time - qos) / qos))
+    q = math.log(1 + math.exp(100 * (computing_time - qos) / qos))*computing_time*request_num
     g_reward = -alpha * (e_self_it + e_self_cooling + e_other_cooling + e_other_it) - beta * q
+    #print('#############',e_self_it,e_self_cooling,e_other_cooling,e_other_it,q)
     return g_reward
 
 
@@ -172,9 +173,9 @@ for i in range(episode):
     timeline = 0
 
     df = pd.read_csv("./data-4363/test_" + str(i) + ".csv")
-    print(df.shape)
-    print(df.dtypes)
-    print(df.index)
+    # print(df.shape)
+    # print(df.dtypes)
+    # print(df.index)
     for indexes in df.index:
         request_id = int(df.loc[indexes].values[0])  # 请求的id
         userType = int(df.loc[indexes].values[1] % 12)  # user number, there are 12 users in total
@@ -189,15 +190,13 @@ for i in range(episode):
 
         QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
+        
         while True:
             QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
-                                         (1.5 * QoSMax - QoSMin * 1.2) / 6.0))  # QoS requirement
+                                         (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
             if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
                 break
-            else:
-                QoS = (QoSMin + QoSMax) / 2
-                break
-
+        
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
         '''
         DRL code here
@@ -243,7 +242,7 @@ for i in range(episode):
             dqn.store_transition(s, action, reward, s_)
             if dqn.memory_counter > MEMORY_CAPACITY:
                 loss = dqn.learn()
-                if indexes % 100 == 0:
+                if indexes % 500 == 0:
                     print('reward ' + str(reward))
             s = s_  # 更新state
 
@@ -272,7 +271,7 @@ for i in range(episode):
 
         # 训练过程中记录loss曲线
 
-    print('==============', E_IT, E_Cooling, '==============')
+    print('==============', i, E_IT, E_Cooling, '==============')
 
     # QoS_satisfy to file
     QoSsatisfy = pd.DataFrame(
