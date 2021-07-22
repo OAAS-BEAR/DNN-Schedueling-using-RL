@@ -22,10 +22,14 @@ training DRL
 # ResNetV1-50, ResNetV1-101, ResNetV1-152, EfficientNet-B1, EfficientNet-B3, EfficientNet-B5,
 # EfficientNet-B7, Unet, YoloV3-416, YoloV3-spp, YoloV3-tiny, and NER
 
-CPURealTimeW = [0.099118, 0.194185, 0.279248, 0.192070, 0.229745, 0.457346, 1.002424, 0.233919, 0.250791, 0.256342, 0.045661, 0.005784]  # the computing time on the CPU in the warm water area
-CPURealTimeC = [0.097433, 0.192931, 0.276896, 0.188478, 0.227395, 0.451082, 0.898043, 0.176990, 0.214053, 0.226121, 0.043751, 0.005650]  # the computing time on the CPU in the cold water area
-GPURealTimeW = [0.037001, 0.057690, 0.086847, 0.073057, 0.088970, 0.124025, 0.201542, 0.027709, 0.049020, 0.048426, 0.011849, 0.014269]  # the computing time on the GPU in the warm water area
-GPURealTimeC = [0.033925, 0.051543, 0.071645, 0.064489, 0.082196, 0.108451, 0.182225, 0.022258, 0.041965, 0.046916, 0.009727, 0.014012]  # the computing time on the GPU in the cold water area
+CPURealTimeW = [0.099118, 0.194185, 0.279248, 0.192070, 0.229745, 0.457346, 1.002424, 0.233919, 0.250791, 0.256342,
+                0.045661, 0.005784]  # the computing time on the CPU in the warm water area
+CPURealTimeC = [0.097433, 0.192931, 0.276896, 0.188478, 0.227395, 0.451082, 0.898043, 0.176990, 0.214053, 0.226121,
+                0.043751, 0.005650]  # the computing time on the CPU in the cold water area
+GPURealTimeW = [0.037001, 0.057690, 0.086847, 0.073057, 0.088970, 0.124025, 0.201542, 0.027709, 0.049020, 0.048426,
+                0.011849, 0.014269]  # the computing time on the GPU in the warm water area
+GPURealTimeC = [0.033925, 0.051543, 0.071645, 0.064489, 0.082196, 0.108451, 0.182225, 0.022258, 0.041965, 0.046916,
+                0.009727, 0.014012]  # the computing time on the GPU in the cold water area
 CPUEnergyW = [6.161884, 12.071303, 18.150614, 7.967937, 11.601355, 33.376023, 79.719643, 19.230621, 19.678410,
               20.852059, 4.029731, 0.311649]  # the energy consumption on the CPU in the warm water area
 CPUEnergyC = [7.111787, 12.240676, 18.289973, 8.049952, 11.861565, 33.488322, 81.943463, 25.966349, 24.844868,
@@ -75,8 +79,8 @@ def activate_server_rack(activated_server_racks, M, state, action):
 # 执行action
 def act(request_id, action, state, activated_server_racks, processing_request, M, finish_time):
     s_new = copy.deepcopy(state)
-    for x in range(len(activated_server_racks[str(action)])): # 机架
-        for j in range(len(activated_server_racks[str(action)][x])): # 硬件
+    for x in range(len(activated_server_racks[str(action)])):  # 机架
+        for j in range(len(activated_server_racks[str(action)][x])):  # 硬件
             if activated_server_racks[str(action)][x][j][0] == 1:
                 activated_server_racks[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
                 activated_server_racks[str(action)][x][j][1] = finish_time
@@ -106,7 +110,7 @@ def release_hardware(request_id, activated_server_racks, state, processing_reque
     E2 = processing_request[request_id][5]
     Q = processing_request[request_id]
     processing_request.pop(request_id)
-    return E1,E2,Q
+    return E1, E2, Q
 
 
 # reward function using DRL
@@ -115,21 +119,24 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
     c_action = processing_request[request_id][0]
     if qos >= computing_time:
         request_num = math.floor((finish_time - start_time) / qos)
-        e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (finish_time - start_time - qos * request_num)*idle_power[c_action]
+        e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (
+                    finish_time - start_time - qos * request_num) * idle_power[c_action]
         e_self_cooling = gama[c_action] * e_self_it
     else:
         request_num = math.floor((finish_time - start_time) / computing_time)
-        e_self_it = energy_consumption * request_num + (finish_time - start_time - computing_time * request_num)*idle_power[c_action]
+        e_self_it = energy_consumption * request_num + (finish_time - start_time - computing_time * request_num) * \
+                    idle_power[c_action]
         e_self_cooling = gama[c_action] * e_self_it
     rack_id = processing_request[request_id][1]
     this_hardware_id = processing_request[request_id][2]
     this_action = processing_request[request_id][0]
-    
-    processing_request[request_id].extend(e_self_it, e_self_cooling, start_time, computing_time, qos, energy_consumption)  # 便于计算系统总能耗开销
+
+    processing_request[request_id].extend(e_self_it, e_self_cooling, start_time, computing_time, qos,
+                                          energy_consumption)  # 便于计算系统总能耗开销
     max_finish = 0
 
     # 计算max finish time
-    for action in [this_action, (this_action+2) % 4]:
+    for action in [this_action, (this_action + 2) % 4]:
         for hardware_id in range(len(activated_server_racks[str(action)][rack_id])):
             if activated_server_racks[str(action)][rack_id][hardware_id][1] > max_finish and not (
                     this_action == action and this_hardware_id == hardware_id):
@@ -141,7 +148,7 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
 
     # compute e_other_it
     e_other_it = 0
-    for h in [this_action, (this_action+2) % 4]:
+    for h in [this_action, (this_action + 2) % 4]:
         if h == this_action:
             x = 1
         else:
@@ -155,8 +162,9 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
 
 
 for i in range(episode):
-    activated_server_racks = {'0':[],'1':[],'2':[],'3':[]}  # 记录已经激活的server rack里硬件的信息
-    s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # state, the last four numbers are the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
+    activated_server_racks = {'0': [], '1': [], '2': [], '3': []}  # 记录已经激活的server rack里硬件的信息
+    s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0]  # state, the last four numbers are the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
     processing_request = {}  # 正在处理的requests      request_id->(action,rack_id,hardware_id)
     QoS_satisfy = []
     E_IT = 0
@@ -196,8 +204,9 @@ for i in range(episode):
         '''
         if inTime > timeline:
             for iii in range(4):
-                E_IT += np.sum(activated_server_racks[str(iii)])*idle_power[iii]*(inTime-timeline)
-                E_Cooling += np.sum(activated_server_racks[str(iii)])*idle_power[iii]*gama[iii]*(inTime-timeline)
+                E_IT += np.sum(activated_server_racks[str(iii)]) * idle_power[iii] * (inTime - timeline)
+                E_Cooling += np.sum(activated_server_racks[str(iii)]) * idle_power[iii] * gama[iii] * (
+                            inTime - timeline)
         timeline = inTime  # timeline 增加
 
         if flag == 0:  # 某一个请求结束,则更改STATE，即hardwareNumber
@@ -233,27 +242,29 @@ for i in range(episode):
                                 e_consumption, outTime, inTime, QoS)
             dqn.store_transition(s, action, reward, s_)
             if dqn.memory_counter > MEMORY_CAPACITY:
-                loss=dqn.learn()
-                if indexes%100==0:
-                    print('reward '+str(reward))
+                loss = dqn.learn()
+                if indexes % 100 == 0:
+                    print('reward ' + str(reward))
                     print('epcoh ' + str(i) + ' step ' + str(indexes) + ' : ' + ' , LOSS =' + str(loss.item()))
             s = s_  # 更新state
-    
+
     for request_id in processing_request:
         c_action = processing_request[request_id][0]
         qos = processing_request[request_id][8]
-        Q = (processing_request[request_id][7]-processing_request[request_id][8])/processing_request[request_id][8]
+        Q = (processing_request[request_id][7] - processing_request[request_id][8]) / processing_request[request_id][8]
         computing_time = processing_request[request_id][7]
         energy_consumption = processing_request[request_id][9]
         start_time = processing_request[request_id][6]
         finish_time = timeline
         if qos >= computing_time:
             request_num = math.floor((finish_time - start_time) / qos)
-            e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (finish_time - start_time - qos * request_num)*idle_power[c_action]
+            e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (
+                        finish_time - start_time - qos * request_num) * idle_power[c_action]
             e_self_cooling = gama[c_action] * e_self_it
         else:
             request_num = math.floor((finish_time - start_time) / computing_time)
-            e_self_it = energy_consumption * request_num + (finish_time - start_time - computing_time * request_num)*idle_power[c_action]
+            e_self_it = energy_consumption * request_num + (finish_time - start_time - computing_time * request_num) * \
+                        idle_power[c_action]
             e_self_cooling = gama[c_action] * e_self_it
 
         E_IT += e_self_it
@@ -261,15 +272,17 @@ for i in range(episode):
         QoS_satisfy.append(processing_request[request_id])
 
         # 训练过程中记录loss曲线
-    
-    print('==============',E_IT,E_Cooling,'==============')
-    
-    #QoS_satisfy to file
-    QoSsatisfy = pd.DataFrame(columns=['action', 'rack_id', 'hardware_id', 'finish_time', 'e_self_it', 'e_self_cooling', 'start_time', \
-                 'computing_time','qos', 'energy_consumption'], data=QoS_satisfy)
+
+    print('==============', E_IT, E_Cooling, '==============')
+
+    # QoS_satisfy to file
+    QoSsatisfy = pd.DataFrame(
+        columns=['action', 'rack_id', 'hardware_id', 'finish_time', 'e_self_it', 'e_self_cooling', 'start_time',
+                 'computing_time', 'qos', 'energy_consumption'], data=QoS_satisfy)
     QoSsatisfy.to_csv("./result/QoS_" + str(i) + ".csv", index=False)
 
-    # processing_request: action, rack_id, hardware_id, finish_time, e_self_it, e_self_cooling, start_time, computing_time, qos, energy_consumption
+    # processing_request: action, rack_id, hardware_id, finish_time, e_self_it, e_self_cooling, start_time,
+    # computing_time, qos, energy_consumption
 
 '''
 testing DRL
