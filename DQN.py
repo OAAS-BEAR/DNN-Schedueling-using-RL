@@ -26,9 +26,9 @@ class Net(nn.Module):
 
     def forward(self, s):
         s = self.fc1(s)
-        s = tnf.relu(s)
+        s = tnf.elu(s)
         s = self.fc2(s)
-        s = tnf.relu(s)
+        s = tnf.elu(s)
         actions_value = self.out(s)
         return actions_value  # return Q(S,A)
 
