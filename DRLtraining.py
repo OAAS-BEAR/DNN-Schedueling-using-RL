@@ -1,10 +1,12 @@
 import copy
 import math
+import sys
 
 import numpy as np
 import pandas as pd
 
 from DQN import DQN
+from DQN import doubleDQN
 
 # np.random.seed(10)
 MEMORY_CAPACITY = 100
@@ -49,7 +51,10 @@ LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0
 
 M = [10, 10, 20, 20]  # number of hardware in each server rack, CPU-W,CPU-C,GPU-W,GPU-C
 
-dqn = DQN()
+if sys.argv[1] == 'd':
+    dqn = DQN()
+else:
+    dqn = doubleDQN()
 episode = 80
 
 idle_power = [24, 24, 10, 10]
@@ -244,6 +249,7 @@ for i in range(episode):
                 loss = dqn.learn()
                 if indexes % 500 == 0:
                     print('reward ' + str(reward))
+                    print('epcoh ' + str(i) + ' step ' + str(indexes) + ' : ' + ' , LOSS =' + str(loss.item()))
             s = s_  # 更新state
 
     for request_id in processing_request:
