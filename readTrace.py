@@ -1,4 +1,3 @@
-from numpy.core.numeric import NaN
 import pandas as pd
 import numpy as np
 from math import isnan
@@ -10,7 +9,7 @@ np.random.seed(10)
 read trace data from sqlite, the trace is downloaded from https://github.com/Azure/AzurePublicDataset/blob/master/AzureTracesForPacking2020.md
 '''
 import sqlite3
-with sqlite3.connect('./trace/packing_trace_zone_a_v1.sqlite') as con:
+with sqlite3.connect('./packing_trace_zone_a_v1.sqlite') as con:
     #df = pd.read_sql_query("SELECT * FROM (SELECT * FROM vm where starttime >= 0 and starttime < 1 order by random() limit 2182) order by starttime", con=con)
     df = pd.read_sql_query("SELECT * FROM vm where starttime >= 0 and starttime < 1 order by random()", con=con)
     
@@ -38,22 +37,20 @@ with sqlite3.connect('./trace/packing_trace_zone_a_v1.sqlite') as con:
     # print(np.max(maxnum))
     
     for i in range(100):
+        dftmp = df.loc[i*4363:(i+1)*4363-1]
         if i <80:
-            dftmp = df.loc[i*4363:(i+1)*4363]
-            for indexs in df.index:
-                df.loc[indexs].values[-2] = round(df.loc[indexs].values[-2]*86400)
-                if isnan(df.loc[indexs].values[-1]):
+            for indexs in dftmp.index:
+                dftmp.loc[indexs,'starttime'] = int(round(dftmp.loc[indexs].values[-2]*86400,0))
+                if isnan(dftmp.loc[indexs].values[-1]):
                     pass
                 else:
-                    df.loc[indexs].values[-1] = round(df.loc[indexs].values[-1]*86400)
-
-            dftmp.to_csv("./trace/data-4363/test"+str(i)+".csv")
+                    dftmp.loc[indexs,'endtime'] = int(round(dftmp.loc[indexs].values[-1]*86400,0))
+            dftmp.to_csv("./data-4363/test"+str(i)+".csv")
         else:
-            for indexs in df.index:
-                df.loc[indexs].values[-2] = round(df.loc[indexs].values[-2]*86400)
-                if isnan(df.loc[indexs].values[-1]):
+            for indexs in dftmp.index:
+                dftmp.loc[indexs,'starttime'] = int(round(dftmp.loc[indexs].values[-2]*86400,0))
+                if isnan(dftmp.loc[indexs].values[-1]):
                     pass
                 else:
-                    df.loc[indexs].values[-1] = round(df.loc[indexs].values[-1]*86400)
-            dftmp = df.loc[i*4363:(i+1)*4363]
-            dftmp.to_csv("./trace/data-4363/val"+str(i-80)+".csv")
+                    dftmp.loc[indexs,'endtime'] = int(round(dftmp.loc[indexs].values[-1]*86400,0))
+            dftmp.to_csv("./data-4363/val"+str(i-80)+".csv")

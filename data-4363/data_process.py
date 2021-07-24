@@ -50,10 +50,7 @@ for i in range(80):
     with open("test_"+str(i)+".csv",'w') as f1:
         f1_csv = csv.writer(f1)
         f1_csv.writerow(['','vmId','tenantId','vmTypeId','priority','time','flag','during_time'])
-        while not customers.empty():
-            f1_csv.writerow(customers.get()[1])
-
-
-
-
-
+        while (not customers.empty()):
+            row = customers.get()[1]
+            if (round(float(row[5])) <= 86400):
+                f1_csv.writerow(row)
