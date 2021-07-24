@@ -59,7 +59,7 @@ episode = 320
 
 idle_power = [24, 24, 10, 10]
 gama = [0.01, 0.26, 0.01, 0.26]  # gama = CoolingEnergy / ITEnergy
-alpha = 0.000001
+alpha = 0.00001
 beta = 0.00001
 
 
@@ -206,30 +206,30 @@ for i in range(episode):
     E_Cooling = 0
     timeline = 0
 
-    df = pd.read_csv("./data-4363/test_" + str(i%80) + ".csv")
+    df = pd.read_csv("./data-4363/test.csv")
     # print(df.shape)
     # print(df.dtypes)
     # print(df.index)
     for indexes in df.index:
         request_id = int(df.loc[indexes].values[0])  # 请求的id
-        userType = int(df.loc[indexes].values[1] % 12)  # user number, there are 12 users in total
-        DNNType = int(df.loc[indexes].values[2] % 12 ) # DNN model number, there are 12 DNN models in total
-        inTime = df.loc[indexes].values[-3] # request starts
-        flag = int(df.loc[indexes].values[-2])  # request begin or end
+        userType = int(df.loc[indexes].values[2] % 12)  # user number, there are 12 users in total
+        DNNType = int(df.loc[indexes].values[3] % 12 ) # DNN model number, there are 12 DNN models in total
+        inTime = df.loc[indexes].values[-4] # request starts
+        flag = int(df.loc[indexes].values[-3])  # request begin or end
         pCONV = LayerComp[DNNType][0]
         pPOOL = LayerComp[DNNType][1]
         pFC = LayerComp[DNNType][2]
         pBatch = LayerComp[DNNType][3]
         pRC = LayerComp[DNNType][4]
-
-        QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
-        QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
+        QoS = float(df.loc[indexes].values[-1])
+        # QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
+        # QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         
-        while True:
-            QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
-                                         (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
-            if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
-                break
+        # while True:
+        #     QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
+        #                                  (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
+        #     if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
+        #         break
         
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
         '''
@@ -263,7 +263,7 @@ for i in range(episode):
             s[8] = pRC
             s[9] = QoS
             action = dqn.choose_action(s)
-            outTime = df.loc[indexes].values[-3] + df.loc[indexes].values[-1]
+            outTime = df.loc[indexes].values[-4] + df.loc[indexes].values[-2]
 
             # 获取新的state,即更改hardwareNumber
             s_ = act(request_id, action, s, activated_server_racks, processing_request, M, outTime, activated_server_racks_flags)
