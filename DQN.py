@@ -25,11 +25,11 @@ device = torch.device('cuda:0')
 class Net(nn.Module):
     def __init__(self, ):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(N_STATES, 64).to(device)
+        self.fc1 = nn.Linear(N_STATES, 128)
         self.fc1.weight.data.normal_(0, 0.1)
-        self.fc2 = nn.Linear(64, 32)
+        self.fc2 = nn.Linear(128, 64)
         self.fc2.weight.data.normal_(0, 0.1)
-        self.out = nn.Linear(32, N_ACTIONS)
+        self.out = nn.Linear(64, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)
 
     def forward(self, s):
