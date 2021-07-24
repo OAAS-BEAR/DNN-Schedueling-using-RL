@@ -55,7 +55,7 @@ if sys.argv[1] == 'd':
     dqn = DQN()
 else:
     dqn = doubleDQN()
-episode = 80
+episode = 10
 
 idle_power = [24, 24, 10, 10]
 gama = [0.01, 0.26, 0.01, 0.26]  # gama = CoolingEnergy / ITEnergy
@@ -245,30 +245,30 @@ for i in range(episode):
     E_Cooling = 0
     timeline = 0
 
-    df = pd.read_csv("./data-4363/test_" + str(i) + ".csv")
+    df = pd.read_csv("./data-4363/test.csv")
     # print(df.shape)
     # print(df.dtypes)
     # print(df.index)
     for indexes in df.index:
         request_id = int(df.loc[indexes].values[0])  # 请求的id
-        userType = int(df.loc[indexes].values[1] % 12)  # user number, there are 12 users in total
-        DNNType = int(df.loc[indexes].values[2] % 12 ) # DNN model number, there are 12 DNN models in total
-        inTime = df.loc[indexes].values[-3] # request starts
-        flag = int(df.loc[indexes].values[-2])  # request begin or end
+        userType = int(df.loc[indexes].values[2] % 12)  # user number, there are 12 users in total
+        DNNType = int(df.loc[indexes].values[3] % 12 ) # DNN model number, there are 12 DNN models in total
+        inTime = df.loc[indexes].values[-4] # request starts
+        flag = int(df.loc[indexes].values[-3])  # request begin or end
         pCONV = LayerComp[DNNType][0]
         pPOOL = LayerComp[DNNType][1]
         pFC = LayerComp[DNNType][2]
         pBatch = LayerComp[DNNType][3]
         pRC = LayerComp[DNNType][4]
-
-        QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
-        QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
+        QoS = float(df.loc[indexes].values[-1])
+        # QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
+        # QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         
-        while True:
-            QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
-                                         (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
-            if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
-                break
+        # while True:
+        #     QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
+        #                                  (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
+        #     if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
+        #         break
         
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
         '''
@@ -301,7 +301,7 @@ for i in range(episode):
             s[7] = pBatch
             s[8] = pRC
             s[9] = QoS
-            outTime = df.loc[indexes].values[-3] + df.loc[indexes].values[-1]
+            outTime = df.loc[indexes].values[-4] + df.loc[indexes].values[-2]
             energy = [CPUEnergyW[DNNType], CPUEnergyC[DNNType], GPUEnergyW[DNNType], GPUEnergyC[DNNType]]
             e_consumption = np.average(energy)
             rewards = []
@@ -311,11 +311,22 @@ for i in range(episode):
                                 e_consumption, outTime, inTime, QoS)
                 rewards.append(reward)
             
-            #action=rewards.index(max(rewards))
-            #当多个选择具有相同的最大reward时，随机选择一个
+            '''
+            greedy选择
+            '''
+            action=rewards.index(max(rewards))
+            # 当多个选择具有相同的最大reward时，随机选择一个
             actionlist = np.argwhere(np.array(rewards)==max(rewards))
             index = np.random.randint(0,len(actionlist))
             action = actionlist[index][0]
+            
+            '''
+            随机从满足QoS的action中选择一个action
+            '''
+            # index = np.random.randint(0,len(rewards))
+            # while(rewards[index] == -float('inf')):
+            #     index = np.random.randint(0,len(rewards))
+            # action = index
 
             c_time = s[action]
             e_consumption = energy[action]
