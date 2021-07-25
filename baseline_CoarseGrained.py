@@ -1,12 +1,10 @@
 import copy
 import math
 import os
-import sys
 
 import numpy as np
 import pandas as pd
 
-from DQN import DQN
 from DQN import doubleDQN
 
 # np.random.seed(10)
@@ -52,10 +50,7 @@ LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0
 
 M = [10, 10, 20, 20]  # number of hardware in each server rack, CPU-W,CPU-C,GPU-W,GPU-C
 
-if sys.argv[1] == 'd':
-    dqn = DQN()
-else:
-    dqn = doubleDQN()
+dqn = doubleDQN()
 episode = 10
 
 idle_power = [24, 24, 10, 10]
@@ -65,15 +60,15 @@ alpha = 0.000001
 
 # 新激活一个server rack
 def activate_server_rack(activated_server_racks, M, state, action, activated_server_racks_flags):
-    for i in range(len(activated_server_racks_flags[str(action)])):
-        if activated_server_racks_flags[str(action)][i] == 0:
-            activated_server_racks_flags[str(action)][i] = 1
-            activated_server_racks_flags[str((action + 2) % 4)][i] = 1
-            return i
+    for t in range(len(activated_server_racks_flags[str(action)])):
+        if activated_server_racks_flags[str(action)][t] == 0:
+            activated_server_racks_flags[str(action)][t] = 1
+            activated_server_racks_flags[str((action + 2) % 4)][t] = 1
+            return t
     new_server_rack = [[], [], [], []]  # 新开辟的server_rack
-    for x in range(4):
-        for ii in range(M[x]):
-            new_server_rack[x].append([1, 0.0])  # list里每一项对应一个硬件状态(idle是否为真，finish_time)
+    for t in range(4):
+        for ii in range(M[t]):
+            new_server_rack[t].append([1, 0.0])  # list里每一项对应一个硬件状态(idle是否为真，finish_time)
     if action == 0 or action == 2:
         activated_server_racks['0'].append(new_server_rack[0])  # 设置单个rack里的硬件信息,list里每一项对应一个硬件状态(0表示idle,finish_time)
         activated_server_racks['2'].append(new_server_rack[2])  # 设置单个rack里的硬件信息
@@ -95,14 +90,14 @@ def activate_server_rack(activated_server_racks, M, state, action, activated_ser
 def act(request_id, action, state, activated_server_racks, processing_request, M, finish_time,
         activated_server_racks_flags):
     s_new = copy.deepcopy(state)
-    for x in range(len(activated_server_racks[str(action)])):  # 机架
-        if activated_server_racks_flags[str(action)][x] == 1:
-            for j in range(len(activated_server_racks[str(action)][x])):  # 硬件
-                if activated_server_racks[str(action)][x][j][0] == 1:
-                    activated_server_racks[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
-                    activated_server_racks[str(action)][x][j][1] = finish_time
+    for t in range(len(activated_server_racks[str(action)])):  # 机架
+        if activated_server_racks_flags[str(action)][t] == 1:
+            for j in range(len(activated_server_racks[str(action)][t])):  # 硬件
+                if activated_server_racks[str(action)][t][j][0] == 1:
+                    activated_server_racks[str(action)][t][j][0] = 0  # 寻找一个机架来执行任务
+                    activated_server_racks[str(action)][t][j][1] = finish_time
                     s_new[action + 10] -= 1  # 更新总的空闲硬件数目硬件
-                    processing_request[request_id] = [action, x, j, finish_time]  # 添加任务信息到processing_request
+                    processing_request[request_id] = [action, t, j, finish_time]  # 添加任务信息到processing_request
                     return s_new
     # 没有空余硬件可用，需要新激活一个server rack
     rack_id = activate_server_rack(activated_server_racks, M, s_new, action, activated_server_racks_flags)
@@ -203,11 +198,11 @@ def greedy_reward(computing_time, action, energy_consumption, finish_time, start
     max_finish = 0
 
     # 计算max finish time
-    for action in [this_action, (this_action + 2) % 4]:
-        for hardware_id in range(len(activated_server_racks_tmp[str(action)][rack_id])):
-            if activated_server_racks_tmp[str(action)][rack_id][hardware_id][1] > max_finish and not (
-                    this_action == action and this_hardware_id == hardware_id):
-                max_finish = activated_server_racks_tmp[str(action)][rack_id][hardware_id][1]
+    for ac in [this_action, (this_action + 2) % 4]:
+        for hardware_id in range(len(activated_server_racks_tmp[str(ac)][rack_id])):
+            if activated_server_racks_tmp[str(ac)][rack_id][hardware_id][1] > max_finish and not (
+                    this_action == ac and this_hardware_id == hardware_id):
+                max_finish = activated_server_racks_tmp[str(ac)][rack_id][hardware_id][1]
     if finish_time > max_finish:
         time = finish_time - max_finish
     else:
@@ -315,7 +310,7 @@ for i in range(episode):
             energy = [CPUEnergyW[DNNType], CPUEnergyC[DNNType], GPUEnergyW[DNNType], GPUEnergyC[DNNType]]
             e_consumption = np.average(energy)
             rewards = []
-            for action in range(4):
+            for action in [1, 3]:
                 c_time = s[action]
                 reward = greedy_reward(c_time, action,
                                        e_consumption, outTime, inTime, QoS)
@@ -324,20 +319,14 @@ for i in range(episode):
             '''
             greedy选择
             '''
-            # action = rewards.index(max(rewards))
             # 当多个选择具有相同的最大reward时，随机选择一个
             actionList = np.argwhere(np.array(rewards) == max(rewards))
             index = np.random.randint(0, len(actionList))
-            action = actionList[index][0]
+            action = actionList[index][0] * 2 + 1
 
             '''
             随机从满足QoS的action中选择一个action
             '''
-            # index = np.random.randint(0,len(rewards))
-            # while(rewards[index] == -float('inf')):
-            #     index = np.random.randint(0,len(rewards))
-            # action = index
-
             c_time = s[action]
             e_consumption = energy[action]
             # 获取新的state,即更改hardwareNumber
@@ -375,7 +364,7 @@ for i in range(episode):
     print('==============', i, E_IT / 3600000, E_Cooling / 3600000, '==============')
 
     # QoS_satisfy to file
-    p = "./result_greedy/"
+    p = "./result_baseline/"
     if not os.path.exists(p):     # 判断当前路径是否存在，没有则创建new文件夹
         os.makedirs(p)
     fl = open(p + "QoS_" + str(i) + ".csv", "w")
@@ -383,7 +372,7 @@ for i in range(episode):
     QoSSatisfy = pd.DataFrame(
         columns=['action', 'rack_id', 'hardware_id', 'finish_time', 'e_self_it', 'e_self_cooling', 'start_time',
                  'computing_time', 'qos', 'energy_consumption'], data=QoS_satisfy)
-    QoSSatisfy.to_csv("./result_greedy/QoS_" + str(i) + ".csv", index=False)
+    QoSSatisfy.to_csv(p + "QoS_" + str(i) + ".csv", index=False)
 
     # processing_request: action, rack_id, hardware_id, finish_time, e_self_it, e_self_cooling, start_time,
     # computing_time, qos, energy_consumption
