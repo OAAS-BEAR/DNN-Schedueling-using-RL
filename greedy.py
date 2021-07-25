@@ -67,9 +67,9 @@ def activate_server_rack(activated_server_racks, M, state, action, activated_ser
     for i in range(len(activated_server_racks_flags[str(action)])):
         if activated_server_racks_flags[str(action)][i] == 0:
             activated_server_racks_flags[str(action)][i] = 1
-            activated_server_racks_flags[str((action+2) % 4)][i] = 1
+            activated_server_racks_flags[str((action + 2) % 4)][i] = 1
             return i
-    new_server_rack = [[],[],[],[]]  # 新开辟的server_rack
+    new_server_rack = [[], [], [], []]  # 新开辟的server_rack
     for x in range(4):
         for ii in range(M[x]):
             new_server_rack[x].append([1, 0.0])  # list里每一项对应一个硬件状态(idle是否为真，finish_time)
@@ -91,7 +91,8 @@ def activate_server_rack(activated_server_racks, M, state, action, activated_ser
 
 
 # 执行action
-def act(request_id, action, state, activated_server_racks, processing_request, M, finish_time, activated_server_racks_flags):
+def act(request_id, action, state, activated_server_racks, processing_request, M, finish_time,
+        activated_server_racks_flags):
     s_new = copy.deepcopy(state)
     for x in range(len(activated_server_racks[str(action)])):  # 机架
         if activated_server_racks_flags[str(action)][x] == 1:
@@ -100,7 +101,7 @@ def act(request_id, action, state, activated_server_racks, processing_request, M
                     activated_server_racks[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
                     activated_server_racks[str(action)][x][j][1] = finish_time
                     s_new[action + 10] -= 1  # 更新总的空闲硬件数目硬件
-                    processing_request[request_id] = [action, x, j, finish_time] # 添加任务信息到processing_request
+                    processing_request[request_id] = [action, x, j, finish_time]  # 添加任务信息到processing_request
                     return s_new
     # 没有空余硬件可用，需要新激活一个server rack
     rack_id = activate_server_rack(activated_server_racks, M, s_new, action, activated_server_racks_flags)
@@ -123,86 +124,89 @@ def release_hardware(request_id, activated_server_racks, state, processing_reque
     # deactivate racks
     restNum = 0
     action1 = action
-    action2 = (action+2) % 4
+    action2 = (action + 2) % 4
     for ii in range(len(activated_server_racks[str(action1)][rack_id])):
         restNum += activated_server_racks[str(action1)][rack_id][ii][0]
     for ii in range(len(activated_server_racks[str(action2)][rack_id])):
         restNum += activated_server_racks[str(action2)][rack_id][ii][0]
-    if restNum == (M[action1]+M[action2]):
+    if restNum == (M[action1] + M[action2]):
         activated_server_racks_flags[str(action1)][rack_id] = 0
         activated_server_racks_flags[str(action2)][rack_id] = 0
         state[action1 + 10] -= M[action1]
         state[action2 + 10] -= M[action2]
-    
+
     E1 = processing_request[request_id][4]
     E2 = processing_request[request_id][5]
     Q = processing_request[request_id]
     processing_request.pop(request_id)
     return E1, E2, Q
 
-def greedy_reward(computing_time, action,energy_consumption, finish_time, start_time, qos):
-    '''
+
+def greedy_reward(computing_time, action, energy_consumption, finish_time, start_time, qos):
+    """
     模拟采取每种action下产生的后果
-    '''
-    activated_server_rackstmp = copy.deepcopy(activated_server_racks)
-    processing_requesttmp = copy.deepcopy(processing_request)
-    activated_server_racks_flagstmp = copy.deepcopy(activated_server_racks_flags)
-    
+    """
+    activated_server_racks_tmp = copy.deepcopy(activated_server_racks)
+    processing_request_tmp = copy.deepcopy(processing_request)
+    activated_server_racks_flags_tmp = copy.deepcopy(activated_server_racks_flags)
+
     exit_flag = False
-    for x in range(len(activated_server_rackstmp[str(action)])): # 机架
+    for x in range(len(activated_server_racks_tmp[str(action)])):  # 机架
         if activated_server_racks_flags[str(action)][x] == 1:
-            for j in range(len(activated_server_rackstmp[str(action)][x])): # 硬件
-                if activated_server_rackstmp[str(action)][x][j][0] == 1:
-                    activated_server_rackstmp[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
-                    activated_server_rackstmp[str(action)][x][j][1] = finish_time
-                    processing_requesttmp[request_id] = [action, x, j, finish_time]  # 添加任务信息到processing_request
+            for j in range(len(activated_server_racks_tmp[str(action)][x])):  # 硬件
+                if activated_server_racks_tmp[str(action)][x][j][0] == 1:
+                    activated_server_racks_tmp[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
+                    activated_server_racks_tmp[str(action)][x][j][1] = finish_time
+                    processing_request_tmp[request_id] = [action, x, j, finish_time]  # 添加任务信息到processing_request
                     exit_flag = True
                     break
         if exit_flag:
             break
     # 没有空余硬件可用，需要新激活一个server rack
     if exit_flag is False:
-        new_server_rack = [[],[],[],[]]  # 新开辟的server_rack
+        new_server_rack = [[], [], [], []]  # 新开辟的server_rack
         for x in range(4):
             for ii in range(M[x]):
                 new_server_rack[x].append([1, 0.0])  # list里每一项对应一个硬件状态(idle是否为真，finish_time)
         if action == 0 or action == 2:
-            activated_server_rackstmp['0'].append(new_server_rack[0])  # 设置单个rack里的硬件信息,list里每一项对应一个硬件状态(0表示idle,finish_time)
-            activated_server_rackstmp['2'].append(new_server_rack[2])  # 设置单个rack里的硬件信息
-            activated_server_racks_flagstmp['0'].append(1)
-            activated_server_racks_flagstmp['2'].append(1)
+            activated_server_racks_tmp['0'].append(
+                new_server_rack[0])  # 设置单个rack里的硬件信息,list里每一项对应一个硬件状态(0表示idle,finish_time)
+            activated_server_racks_tmp['2'].append(new_server_rack[2])  # 设置单个rack里的硬件信息
+            activated_server_racks_flags_tmp['0'].append(1)
+            activated_server_racks_flags_tmp['2'].append(1)
         else:
-            activated_server_rackstmp['1'].append(new_server_rack[1])
-            activated_server_rackstmp['3'].append(new_server_rack[3])
-            activated_server_racks_flagstmp['1'].append(1)
-            activated_server_racks_flagstmp['3'].append(1)
-        rack_id = len(activated_server_rackstmp[str(action)]) - 1
-        activated_server_rackstmp[str(action)][rack_id][0][0] = 0
-        activated_server_rackstmp[str(action)][rack_id][0][1] = finish_time
-        processing_requesttmp[request_id] = [action, rack_id, 0, finish_time]
+            activated_server_racks_tmp['1'].append(new_server_rack[1])
+            activated_server_racks_tmp['3'].append(new_server_rack[3])
+            activated_server_racks_flags_tmp['1'].append(1)
+            activated_server_racks_flags_tmp['3'].append(1)
+        rack_id = len(activated_server_racks_tmp[str(action)]) - 1
+        activated_server_racks_tmp[str(action)][rack_id][0][0] = 0
+        activated_server_racks_tmp[str(action)][rack_id][0][1] = finish_time
+        processing_request_tmp[request_id] = [action, rack_id, 0, finish_time]
 
     '''
     计算4种能耗值
     '''
     c_action = action
-    if computing_time>qos:
+    if computing_time > qos:
         return -float('inf')
     else:
         request_num = math.floor((finish_time - start_time) / qos)
-        e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (finish_time - start_time - qos * request_num)*idle_power[c_action]
+        e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (
+                finish_time - start_time - qos * request_num) * idle_power[c_action]
         e_self_cooling = gama[c_action] * e_self_it
-    
-    rack_id = processing_requesttmp[request_id][1]
-    this_hardware_id = processing_requesttmp[request_id][2]
-    this_action = processing_requesttmp[request_id][0]
+
+    rack_id = processing_request_tmp[request_id][1]
+    this_hardware_id = processing_request_tmp[request_id][2]
+    this_action = processing_request_tmp[request_id][0]
     max_finish = 0
 
     # 计算max finish time
-    for action in [this_action, (this_action+2) % 4]:
-        for hardware_id in range(len(activated_server_rackstmp[str(action)][rack_id])):
-            if activated_server_rackstmp[str(action)][rack_id][hardware_id][1] > max_finish and not (
+    for action in [this_action, (this_action + 2) % 4]:
+        for hardware_id in range(len(activated_server_racks_tmp[str(action)][rack_id])):
+            if activated_server_racks_tmp[str(action)][rack_id][hardware_id][1] > max_finish and not (
                     this_action == action and this_hardware_id == hardware_id):
-                max_finish = activated_server_rackstmp[str(action)][rack_id][hardware_id][1]
+                max_finish = activated_server_racks_tmp[str(action)][rack_id][hardware_id][1]
     if finish_time > max_finish:
         time = finish_time - max_finish
     else:
@@ -210,7 +214,7 @@ def greedy_reward(computing_time, action,energy_consumption, finish_time, start_
 
     # compute e_other_it
     e_other_it = 0
-    for h in [this_action, (this_action+2) % 4]:
+    for h in [this_action, (this_action + 2) % 4]:
         if h == this_action:
             x = 1
         else:
@@ -218,27 +222,31 @@ def greedy_reward(computing_time, action,energy_consumption, finish_time, start_
         e_other_it += (M[h] - x) * time * idle_power[h]
 
     e_other_cooling = gama[c_action] * e_other_it
-    
+
     g_reward = -alpha * (e_self_it + e_self_cooling + e_other_cooling + e_other_it)
     return g_reward
 
+
 def request_add_item(request_id, computing_time, energy_consumption, finish_time, start_time, qos):
-    '''
+    """
     确定采取某动作后，计算自身的IT和cooling能耗，更新processing_request
-    '''
+    """
     c_action = processing_request[request_id][0]
-    assert(computing_time<=qos)
+    assert (computing_time <= qos)
     request_num = math.floor((finish_time - start_time) / qos)
-    e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (finish_time - start_time - qos * request_num)*idle_power[c_action]
+    e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (
+            finish_time - start_time - qos * request_num) * idle_power[c_action]
     e_self_cooling = gama[c_action] * e_self_it
 
     processing_request[request_id].extend([e_self_it, e_self_cooling, start_time, computing_time, qos,
-                                          energy_consumption])
+                                           energy_consumption])
+
 
 for i in range(episode):
-    activated_server_racks = {'0':[],'1':[],'2':[],'3':[]}  # 记录已经激活的server rack里硬件的信息
+    activated_server_racks = {'0': [], '1': [], '2': [], '3': []}  # 记录已经激活的server rack里硬件的信息
     activated_server_racks_flags = {'0': [], '1': [], '2': [], '3': []}  # 1表示对应的server rack已被激活，0表示又重新deactivate
-    s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # state, the last four numbers are the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
+    s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0]  # state, the last four numbers are the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
     processing_request = {}  # 正在处理的requests      request_id->(action,rack_id,hardware_id)
     QoS_satisfy = []
     E_IT = 0
@@ -252,8 +260,8 @@ for i in range(episode):
     for indexes in df.index:
         request_id = int(df.loc[indexes].values[0])  # 请求的id
         userType = int(df.loc[indexes].values[2] % 12)  # user number, there are 12 users in total
-        DNNType = int(df.loc[indexes].values[3] % 12 ) # DNN model number, there are 12 DNN models in total
-        inTime = df.loc[indexes].values[-4] # request starts
+        DNNType = int(df.loc[indexes].values[3] % 12)  # DNN model number, there are 12 DNN models in total
+        inTime = df.loc[indexes].values[-4]  # request starts
         flag = int(df.loc[indexes].values[-3])  # request begin or end
         pCONV = LayerComp[DNNType][0]
         pPOOL = LayerComp[DNNType][1]
@@ -263,30 +271,31 @@ for i in range(episode):
         QoS = float(df.loc[indexes].values[-1])
         # QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         # QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
-        
+
         # while True:
         #     QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
         #                                  (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
         #     if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
         #         break
-        
+
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
         '''
         DRL code here
         '''
         if inTime > timeline:
-            for iii in range(4):
+            for x in range(4):
                 Num_tmp = 0
-                for iiii in range(len(activated_server_racks[str(iii)])):
-                    if activated_server_racks_flags[str(iii)][iiii] == 1:
-                        for iiiii in range(len(activated_server_racks[str(iii)][0])):
-                            Num_tmp += activated_server_racks[str(iii)][iiii][iiiii][0]
-                E_IT += Num_tmp * idle_power[iii] * (inTime - timeline)
-                E_Cooling += Num_tmp * idle_power[iii] * gama[iii] * (inTime - timeline)
+                for y in range(len(activated_server_racks[str(x)])):
+                    if activated_server_racks_flags[str(x)][y] == 1:
+                        for z in range(len(activated_server_racks[str(x)][0])):
+                            Num_tmp += activated_server_racks[str(x)][y][z][0]
+                E_IT += Num_tmp * idle_power[x] * (inTime - timeline)
+                E_Cooling += Num_tmp * idle_power[x] * gama[x] * (inTime - timeline)
         timeline = inTime  # timeline 增加
 
         if flag == 0:  # 某一个请求结束,则更改STATE，即hardwareNumber
-            E1, E2, Q = release_hardware(request_id, activated_server_racks, s, processing_request, activated_server_racks_flags)
+            E1, E2, Q = release_hardware(request_id, activated_server_racks, s, processing_request,
+                                         activated_server_racks_flags)
             E_IT += E1
             E_Cooling += E2
             QoS_satisfy.append(Q)
@@ -307,19 +316,19 @@ for i in range(episode):
             rewards = []
             for action in range(4):
                 c_time = s[action]
-                reward = greedy_reward(c_time,action,
-                                e_consumption, outTime, inTime, QoS)
+                reward = greedy_reward(c_time, action,
+                                       e_consumption, outTime, inTime, QoS)
                 rewards.append(reward)
-            
+
             '''
             greedy选择
             '''
-            action=rewards.index(max(rewards))
+            # action = rewards.index(max(rewards))
             # 当多个选择具有相同的最大reward时，随机选择一个
-            actionlist = np.argwhere(np.array(rewards)==max(rewards))
-            index = np.random.randint(0,len(actionlist))
-            action = actionlist[index][0]
-            
+            actionList = np.argwhere(np.array(rewards) == max(rewards))
+            index = np.random.randint(0, len(actionList))
+            action = actionList[index][0]
+
             '''
             随机从满足QoS的action中选择一个action
             '''
@@ -331,26 +340,29 @@ for i in range(episode):
             c_time = s[action]
             e_consumption = energy[action]
             # 获取新的state,即更改hardwareNumber
-            s_ = act(request_id, action, s, activated_server_racks, processing_request, M, outTime, activated_server_racks_flags)
-            request_add_item(request_id, c_time,e_consumption, outTime, inTime, QoS)
-            
+            s_ = act(request_id, action, s, activated_server_racks, processing_request, M, outTime,
+                     activated_server_racks_flags)
+            request_add_item(request_id, c_time, e_consumption, outTime, inTime, QoS)
+
             s = s_  # 更新state
-    
+
     for request_id in processing_request:
         c_action = processing_request[request_id][0]
         qos = processing_request[request_id][8]
-        Q = (processing_request[request_id][7]-processing_request[request_id][8])/processing_request[request_id][8]
+        Q = (processing_request[request_id][7] - processing_request[request_id][8]) / processing_request[request_id][8]
         computing_time = processing_request[request_id][7]
         energy_consumption = processing_request[request_id][9]
         start_time = processing_request[request_id][6]
         finish_time = timeline
         if qos >= computing_time:
             request_num = math.floor((finish_time - start_time) / qos)
-            e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (finish_time - start_time - qos * request_num)*idle_power[c_action]
+            e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (
+                    finish_time - start_time - qos * request_num) * idle_power[c_action]
             e_self_cooling = gama[c_action] * e_self_it
         else:
             request_num = math.floor((finish_time - start_time) / computing_time)
-            e_self_it = energy_consumption * request_num + (finish_time - start_time - computing_time * request_num)*idle_power[c_action]
+            e_self_it = energy_consumption * request_num + (finish_time - start_time - computing_time * request_num) * \
+                        idle_power[c_action]
             e_self_cooling = gama[c_action] * e_self_it
 
         E_IT += e_self_it
@@ -358,15 +370,17 @@ for i in range(episode):
         QoS_satisfy.append(processing_request[request_id])
 
         # 训练过程中记录loss曲线
-    
-    print('==============', i, E_IT/3600000, E_Cooling/3600000, '==============')
-    
-    #QoS_satisfy to file
-    QoSsatisfy = pd.DataFrame(columns=['action', 'rack_id', 'hardware_id', 'finish_time', 'e_self_it', 'e_self_cooling', 'start_time', \
-                 'computing_time','qos', 'energy_consumption'], data=QoS_satisfy)
-    QoSsatisfy.to_csv("./result_greedy/QoS_" + str(i) + ".csv", index=False)
 
-    # processing_request: action, rack_id, hardware_id, finish_time, e_self_it, e_self_cooling, start_time, computing_time, qos, energy_consumption
+    print('==============', i, E_IT / 3600000, E_Cooling / 3600000, '==============')
+
+    # QoS_satisfy to file
+    QoSSatisfy = pd.DataFrame(
+        columns=['action', 'rack_id', 'hardware_id', 'finish_time', 'e_self_it', 'e_self_cooling', 'start_time',
+                 'computing_time', 'qos', 'energy_consumption'], data=QoS_satisfy)
+    QoSSatisfy.to_csv("./result_greedy/QoS_" + str(i) + ".csv", index=False)
+
+    # processing_request: action, rack_id, hardware_id, finish_time, e_self_it, e_self_cooling, start_time,
+    # computing_time, qos, energy_consumption
 
 '''
 testing DRL

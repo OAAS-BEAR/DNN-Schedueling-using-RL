@@ -4,12 +4,13 @@ from torch.autograd import Variable
 import torch.nn.functional as tnf
 import numpy as np
 import os
-cpu_num = 6 # 这里设置成你想运行的CPU个数
-os.environ ['OMP_NUM_THREADS'] = str(cpu_num)
-os.environ ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
-os.environ ['MKL_NUM_THREADS'] = str(cpu_num)
-os.environ ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
-os.environ ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
+
+cpu_num = 6  # 这里设置成你想运行的CPU个数
+os.environ['OMP_NUM_THREADS'] = str(cpu_num)
+os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
+os.environ['MKL_NUM_THREADS'] = str(cpu_num)
+os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
+os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
 torch.set_num_threads(cpu_num)
 
 BATCH_SIZE = 32
@@ -21,6 +22,7 @@ MEMORY_CAPACITY = 100
 N_ACTIONS = 4  # number of actions
 N_STATES = 14  # dimensions of states
 device = torch.device('cuda:0')
+
 
 class Net(nn.Module):
     def __init__(self, ):
@@ -152,7 +154,7 @@ class doubleDQN(object):
 
     def save_model(self):
         torch.save(self.target_net, './model.pkl')
-        
+
     def learn(self):
         # target parameter update
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
