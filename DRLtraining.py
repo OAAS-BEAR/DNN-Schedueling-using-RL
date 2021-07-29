@@ -19,34 +19,26 @@ https://github.com/Azure/AzurePublicDataset/blob/master/AzureTracesForPacking202
 training DRL
 '''
 
-# there are 12 DNN models in total
-# ResNetV1-50, ResNetV1-101, ResNetV1-152, EfficientNet-B1, EfficientNet-B3, EfficientNet-B5,
-# EfficientNet-B7, Unet, YoloV3-416, YoloV3-spp, YoloV3-tiny, and NER
+# there are 7 DNN models in total
+# ResNetV1-50, EfficientNet-B1, EfficientNet-B3, Unet, YoloV3-spp, YoloV3-tiny, and NER
 
-CPURealTimeW = [0.099118, 0.194185, 0.279248, 0.192070, 0.229745, 0.457346, 1.002424, 0.233919, 0.250791, 0.256342,
-                0.045661, 0.005784]  # the computing time on the CPU in the warm water area
-CPURealTimeC = [0.097433, 0.192931, 0.276896, 0.188478, 0.227395, 0.451082, 0.898043, 0.176990, 0.214053, 0.226121,
-                0.043751, 0.005650]  # the computing time on the CPU in the cold water area
-GPURealTimeW = [0.037001, 0.057690, 0.086847, 0.073057, 0.088970, 0.124025, 0.201542, 0.027709, 0.049020, 0.048426,
-                0.011849, 0.014269]  # the computing time on the GPU in the warm water area
-GPURealTimeC = [0.033925, 0.051543, 0.071645, 0.064489, 0.082196, 0.108451, 0.182225, 0.022258, 0.041965, 0.046916,
-                0.009727, 0.014012]  # the computing time on the GPU in the cold water area
-CPUEnergyW = [6.161884, 12.071303, 18.150614, 7.967937, 11.601355, 33.376023, 79.719643, 19.230621, 19.678410,
-              20.852059, 4.029731, 0.311649]  # the energy consumption on the CPU in the warm water area
-CPUEnergyC = [7.111787, 12.240676, 18.289973, 8.049952, 11.861565, 33.488322, 81.943463, 25.966349, 24.844868,
-              24.600319, 4.516407, 0.309255]  # the energy consumption on the CPU in the cold water area
-GPUEnergyW = [2.665347, 4.700274, 6.795247, 5.298865, 5.725534, 12.917292, 19.418534, 3.252527, 4.808302, 5.288533,
-              1.154375, 0.847006]  # the energy consumption on the GPU in the warm water area
-GPUEnergyC = [2.462627, 4.252362, 6.279354, 5.540303, 8.499656, 14.834170, 30.017568, 4.468464, 6.518914, 6.571887,
-              1.286960, 0.909147]  # the energy consumption on the GPU in the cold water area
+CPURealTimeW = [0.12593318, 0.168585066, 0.215241714, 0.449792373, 0.378377307, 0.072351546, 0.008672056]  # the computing time on the CPU in the warm water area
+CPURealTimeC = [0.121515624, 0.169374289, 0.216643645, 0.30870271, 0.233688547, 0.065995284, 0.008512394]  # the computing time on the CPU in the cold water area
+GPURealTimeW = [0.028054602, 0.035798463, 0.040783417, 0.0267817, 0.040369528, 0.008844684, 0.025547585]  # the computing time on the GPU in the warm water area
+GPURealTimeC = [0.027557281, 0.035004458, 0.038275455, 0.020054302, 0.036708363, 0.008514694, 0.025139011]  # the computing time on the GPU in the cold water area
+CPUEnergyW = [6.773681904, 4.808776556, 8.623915022, 25.82014818, 22.02489374, 4.150088693, 0.307646299]  # the energy consumption on the CPU in the warm water area
+CPUEnergyC = [7.032627357, 4.723595155, 8.497495705, 40.93891925, 35.33893188, 4.351672798, 0.304127587]  # the energy consumption on the CPU in the cold water area
+GPUEnergyW = [2.109958108, 2.980562943, 3.493269943, 2.535316654, 4.149884927, 1.064684258, 1.650573132]  # the energy consumption on the GPU in the warm water area
+GPUEnergyC = [2.576643546, 3.584285763, 4.008268109, 5.0207346, 5.963033842, 1.252211195, 1.66986749]  # the energy consumption on the GPU in the cold water area
 
-# percentage of CONV, POOL, FC, Batch, and RC layers in each DNN model
-LayerComp = [[0.505, 0.019, 0.010, 0.467, 0.000], [0.502, 0.010, 0.005, 0.483, 0.000],
-             [0.502, 0.006, 0.003, 0.489, 0.000], [0.550, 0.115, 0.005, 0.330, 0.000],
-             [0.551, 0.114, 0.004, 0.331, 0.000], [0.553, 0.114, 0.003, 0.330, 0.000],
-             [0.554, 0.114, 0.002, 0.331, 0.000], [0.857, 0.143, 0.000, 0.000, 0.000],
-             [0.510, 0.000, 0.000, 0.490, 0.000], [0.500, 0.020, 0.000, 0.480, 0.000],
-             [0.433, 0.200, 0.000, 0.367, 0.000], [0.000, 0.000, 0.500, 0.000, 0.500]]
+# percentage of CONV, POOL, FC, Batch, Activation, and RC layers in each DNN model
+LayerComp = [[0.3081395348837209, 0.011627906976744186, 0.005813953488372093, 0.28488372093023256, 0.38953488372093026, 0.0], 
+             [0.26558891454965355, 0.05542725173210162, 0.0023094688221709007, 0.15935334872979215, 0.5173210161662818, 0.0], 
+             [0.2653061224489796, 0.05510204081632653, 0.0020408163265306124, 0.15918367346938775, 0.5183673469387755, 0.0],
+             [0.4, 0.06666666666666667, 0.0, 0.0, 0.5333333333333333, 0.0], 
+             [0.29457364341085274, 0.011627906976744186, 0.0, 0.28294573643410853, 0.4108527131782946, 0.0], 
+             [0.3023255813953488, 0.13953488372093023, 0.0, 0.2558139534883721, 0.3023255813953488, 0.0], 
+             [0.0, 0.0, 0.5, 0.0, 0.0, 0.5]]
 
 M = [10, 10, 20, 20]  # number of hardware in each server rack, CPU-W,CPU-C,GPU-W,GPU-C
 
@@ -56,7 +48,7 @@ else:
     dqn = doubleDQN()
 episode = 320
 
-idle_power = [24, 24, 10, 10]
+idle_power = [26, 26, 10, 10]
 gama = [0.01, 0.26, 0.01, 0.26]  # gama = CoolingEnergy / ITEnergy
 alpha = 0.00001
 beta = 0.00001
@@ -78,8 +70,8 @@ def activate_server_rack(activated_server_racks, M, state, action, activated_ser
         activated_server_racks['2'].append(new_server_rack[2])  # 设置单个rack里的硬件信息
         activated_server_racks_flags['0'].append(1)
         activated_server_racks_flags['2'].append(1)
-        state[10] += M[0]  # 更新总的空闲硬件数量
-        state[12] += M[2]  # 更新总的空闲硬件数量
+        state[11] += M[0]  # 更新总的空闲硬件数量
+        state[13] += M[2]  # 更新总的空闲硬件数量
     else:
         activated_server_racks['1'].append(new_server_rack[1])
         activated_server_racks['3'].append(new_server_rack[3])
@@ -100,14 +92,14 @@ def act(request_id, action, state, activated_server_racks, processing_request, M
                 if activated_server_racks[str(action)][x][j][0] == 1:
                     activated_server_racks[str(action)][x][j][0] = 0  # 寻找一个机架来执行任务
                     activated_server_racks[str(action)][x][j][1] = finish_time
-                    s_new[action + 10] -= 1  # 更新总的空闲硬件数目硬件
+                    s_new[action + 11] -= 1  # 更新总的空闲硬件数目硬件
                     processing_request[request_id] = [action, x, j, finish_time]  # 添加任务信息到processing_request
                     return s_new
     # 没有空余硬件可用，需要新激活一个server rack
     rack_id = activate_server_rack(activated_server_racks, M, s_new, action, activated_server_racks_flags)
     activated_server_racks[str(action)][rack_id][0][0] = 0
     activated_server_racks[str(action)][rack_id][0][1] = finish_time
-    s_new[action + 10] -= 1
+    s_new[action + 11] -= 1
     processing_request[request_id] = [action, rack_id, 0, finish_time]
     return s_new
 
@@ -119,7 +111,7 @@ def release_hardware(request_id, activated_server_racks, state, processing_reque
     hardware_id = processing_request[request_id][2]
     activated_server_racks[str(action)][rack_id][hardware_id][0] = 1  # 完成task后，硬件重新设置为idle
     activated_server_racks[str(action)][rack_id][hardware_id][1] = 0.0  # finish_time设置为0
-    state[action + 10] += 1  # 更新总的空闲硬件数目硬件
+    state[action + 11] += 1  # 更新总的空闲硬件数目硬件
 
     # deactivate racks
     restNum = 0
@@ -132,8 +124,8 @@ def release_hardware(request_id, activated_server_racks, state, processing_reque
     if restNum == (M[action1] + M[action2]):
         activated_server_racks_flags[str(action1)][rack_id] = 0
         activated_server_racks_flags[str(action2)][rack_id] = 0
-        state[action1 + 10] -= M[action1]
-        state[action2 + 10] -= M[action2]
+        state[action1 + 11] -= M[action1]
+        state[action2 + 11] -= M[action2]
 
     E1 = processing_request[request_id][4]
     E2 = processing_request[request_id][5]
@@ -198,7 +190,7 @@ def get_reward(activated_server_racks, processing_request, request_id, computing
 for i in range(episode):
     activated_server_racks = {'0': [], '1': [], '2': [], '3': []}  # 记录已经激活的server rack里硬件的信息
     activated_server_racks_flags = {'0': [], '1': [], '2': [], '3': []}  # 1表示对应的server rack已被激活，0表示又重新deactivate
-    s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    s = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
          0]  # state, the last four numbers are the number of idle hardware in each area, CPU-W,CPU-C,GPU-W,GPU-C
     processing_request = {}  # 正在处理的requests      request_id->(action,rack_id,hardware_id)
     QoS_satisfy = []
@@ -212,15 +204,16 @@ for i in range(episode):
     # print(df.index)
     for indexes in df.index:
         request_id = int(df.loc[indexes].values[0])  # 请求的id
-        userType = int(df.loc[indexes].values[2] % 12)  # user number, there are 12 users in total
-        DNNType = int(df.loc[indexes].values[3] % 12)  # DNN model number, there are 12 DNN models in total
+        userType = int(df.loc[indexes].values[2] % 7)  # user number, there are 12 users in total
+        DNNType = int(df.loc[indexes].values[3] % 7)  # DNN model number, there are 12 DNN models in total
         inTime = df.loc[indexes].values[-4]  # request starts
         flag = int(df.loc[indexes].values[-3])  # request begin or end
         pCONV = LayerComp[DNNType][0]
         pPOOL = LayerComp[DNNType][1]
         pFC = LayerComp[DNNType][2]
         pBatch = LayerComp[DNNType][3]
-        pRC = LayerComp[DNNType][4]
+        pAC = LayerComp[DNNType][4]
+        pRC = LayerComp[DNNType][5]
         QoS = float(df.loc[indexes].values[-1])
         # QoSMin = min(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
         # QoSMax = max(CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType])
@@ -261,8 +254,9 @@ for i in range(episode):
             s[5] = pPOOL
             s[6] = pFC
             s[7] = pBatch
-            s[8] = pRC
-            s[9] = QoS
+            s[8] = pAC
+            s[9] = pRC
+            s[10] = QoS
             action = dqn.choose_action(s)
             outTime = df.loc[indexes].values[-4] + df.loc[indexes].values[-2]
 
