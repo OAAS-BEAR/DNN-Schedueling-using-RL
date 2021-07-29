@@ -31,6 +31,11 @@ CPUEnergyC = [7.032627357, 4.723595155, 8.497495705, 40.93891925, 35.33893188, 4
 GPUEnergyW = [2.109958108, 2.980562943, 3.493269943, 2.535316654, 4.149884927, 1.064684258, 1.650573132]  # the energy consumption on the GPU in the warm water area
 GPUEnergyC = [2.576643546, 3.584285763, 4.008268109, 5.0207346, 5.963033842, 1.252211195, 1.66986749]  # the energy consumption on the GPU in the cold water area
 
+CPUEstimatedTimeW = [0.132363007, 0.173105368, 0.249502095, 0.432562235, 0.357732699, 0.064204907, 0.009701998]  # the estimated computing time on the CPU in the warm water area
+CPUEstimatedTimeC = [0.126060006, 0.164862255, 0.237621043, 0.288374823, 0.238488466, 0.061147531, 0.009239998]  # the estimated computing time on the CPU in the cold water area
+GPUEstimatedTimeW = [0.02679637, 0.040371812, 0.037578119, 0.027756197, 0.04698367, 0.00807134, 0.024438761]  # the estimated computing time on the GPU in the warm water area
+GPUEstimatedTimeC = [0.025520352, 0.038449345, 0.035788685, 0.023130165, 0.039153059, 0.007686991, 0.02327501]  # the estimated computing time on the GPU in the cold water area
+
 # percentage of CONV, POOL, FC, Batch, Activation, and RC layers in each DNN model
 LayerComp = [[0.3081395348837209, 0.011627906976744186, 0.005813953488372093, 0.28488372093023256, 0.38953488372093026, 0.0],
              [0.26558891454965355, 0.05542725173210162, 0.0023094688221709007, 0.15935334872979215, 0.5173210161662818, 0.0],
