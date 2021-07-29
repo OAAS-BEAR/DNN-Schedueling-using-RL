@@ -221,7 +221,7 @@ for i in range(episode):
         # while True:
         #     QoS = round(np.random.normal((QoSMin * 1.2 + 1.5 * QoSMax) / 2.0,
         #                                  (1.5 * QoSMax - QoSMin * 1.2) / 6.0),6)  # QoS requirement
-        #     if QoSMin * 1.2 <= QoS <= 1.5 * QoSMax:
+        #     if QoSMin * 1.1 <= QoS <= 1.5 * QoSMax:
         #         break
 
         # 需判断是否有旧请求在这一时刻结束，如有，则更改STATE，即hardwareNumber
