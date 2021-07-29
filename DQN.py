@@ -5,7 +5,7 @@ import torch.nn.functional as tnf
 import numpy as np
 import os
 
-cpu_num = 6  # 这里设置成你想运行的CPU个数
+cpu_num = 30  # 这里设置成你想运行的CPU个数
 os.environ['OMP_NUM_THREADS'] = str(cpu_num)
 os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
 os.environ['MKL_NUM_THREADS'] = str(cpu_num)
@@ -14,24 +14,29 @@ os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
 torch.set_num_threads(cpu_num)
 
 BATCH_SIZE = 32
-LR = 0.9  # learning rate
-EPSILON = 0.9  # greedy policy
-GAMMA = 0.5  # reward discount
+LR = 0.00001  # learning rate
+EPSILON = 0.70  # greedy policy
+GAMMA = 0.9  # reward discount
 TARGET_REPLACE_ITER = 20  # target update frequency
-MEMORY_CAPACITY = 100
+MEMORY_CAPACITY = 200
 N_ACTIONS = 4  # number of actions
-N_STATES = 14  # dimensions of states
-device = torch.device('cuda:0')
+N_STATES = 15  # dimensions of states
+device = torch.device('cpu')
 
 
 class Net(nn.Module):
     def __init__(self, ):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(N_STATES, 128)
+        self.fc1 = nn.Linear(N_STATES, 128).to(device)
         self.fc1.weight.data.normal_(0, 0.1)
-        self.fc2 = nn.Linear(128, 64)
+
+        self.fc2 = nn.Linear(128, 32)
         self.fc2.weight.data.normal_(0, 0.1)
-        self.out = nn.Linear(64, N_ACTIONS)
+        self.fc3 = nn.Linear(256, 64)
+        self.fc3.weight.data.normal_(0, 0.1)
+        self.fc4 = nn.Linear(64, 32)
+        self.fc4.weight.data.normal_(0, 0.1)
+        self.out = nn.Linear(32, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)
 
     def forward(self, s):
@@ -39,6 +44,10 @@ class Net(nn.Module):
         s = tnf.relu(s)
         s = self.fc2(s)
         s = tnf.relu(s)
+        #s = self.fc3(s)
+        #s = tnf.relu(s)
+        #s = self.fc4(s)
+        #s = tnf.relu(s)
         actions_value = self.out(s)
         return actions_value  # return Q(S,A)
 
@@ -48,19 +57,24 @@ class DQN(object):
         self.target_net = Net().to(device)
         self.learn_step_counter = 0
         self.memory_counter = 0
+        self.epsilon=EPSILON
         self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))  # 初始化memory
         self.optimizer = torch.optim.Adam(self.target_net.parameters(), lr=LR)
         self.loss_func = nn.MSELoss()
 
     # return action
-    def choose_action(self, x):
+    def choose_action(self, x, infer):
+        self.epsilon+=0.00000107
         x = Variable(torch.unsqueeze(torch.FloatTensor(x), 0)).to(device)
-        if np.random.uniform() < EPSILON:
-            actions_value = self.target_net.forward(x)
-            # print(torch.max(actions_value, 1)[1].data.numpy()[0])
-            action = torch.max(actions_value.cpu(), 1)[1].data.numpy()[0]
+        if infer == False:
+            if np.random.uniform() < self.epsilon:
+                actions_value = self.target_net.forward(x)
+                action = torch.max(actions_value.cpu(), 1)[1].data.numpy()[0]
+            else:
+                action = np.random.randint(0, N_ACTIONS)
         else:
-            action = np.random.randint(0, N_ACTIONS)
+            actions_value = self.target_net.forward(x)
+            action = torch.max(actions_value.cpu(), 1)[1].data.numpy()[0]
         return action
 
     def store_transition(self, s, a, r, s_):
@@ -124,21 +138,27 @@ class DQN(object):
 class doubleDQN(object):
     def __init__(self):
         self.eval_net, self.target_net = Net().to(device), Net().to(device)
+        self.target_net = Net().to(device)
         self.learn_step_counter = 0
         self.memory_counter = 0
+        self.epsilon = EPSILON
         self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))  # 初始化memory
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
         self.loss_func = nn.MSELoss()
 
     # return action
-    def choose_action(self, x):
+    def choose_action(self, x, infer):
+        self.epsilon += 0.00000107
         x = Variable(torch.unsqueeze(torch.FloatTensor(x), 0)).to(device)
-        if np.random.uniform() < EPSILON:
-            actions_value = self.eval_net.forward(x)
-            # print(torch.max(actions_value, 1)[1].data.numpy()[0])
-            action = torch.max(actions_value.cpu(), 1)[1].data.numpy()[0]
+        if infer == False:
+            if np.random.uniform() < self.epsilon:
+                actions_value = self.target_net.forward(x)
+                action = torch.max(actions_value.cpu(), 1)[1].data.numpy()[0]
+            else:
+                action = np.random.randint(0, N_ACTIONS)
         else:
-            action = np.random.randint(0, N_ACTIONS)
+            actions_value = self.target_net.forward(x)
+            action = torch.max(actions_value.cpu(), 1)[1].data.numpy()[0]
         return action
 
     def store_transition(self, s, a, r, s_):
