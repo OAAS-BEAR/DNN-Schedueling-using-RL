@@ -274,8 +274,9 @@ for i in range(80):
             获取reward的代码
             '''
             energy = [CPUEnergyW[DNNType], CPUEnergyC[DNNType], GPUEnergyW[DNNType], GPUEnergyC[DNNType]]
+            times = [CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType]]
             # reward = greedy_reward(s[action], energy[action], flag, inTime, QoS, ph_idle, gama, alpha, beta)
-            c_time = s[action]
+            c_time = times[action]
             e_consumption = energy[action]
             reward = get_reward( activated_server_racks, processing_request, request_id, c_time,
                                 e_consumption, outTime, inTime,QoS)
@@ -385,10 +386,10 @@ for i in range(10):
             E_Cooling += E2
             QoS_satisfy.append(Q)
         else:  # 某一请求开始，更改state，然后run DQN
-            s[0] = CPURealTimeW[DNNType]
-            s[1] = CPURealTimeC[DNNType]
-            s[2] = GPURealTimeW[DNNType]
-            s[3] = GPURealTimeC[DNNType]
+            s[0] = CPUEstimatedTimeW[DNNType]
+            s[1] = CPUEstimatedTimeC[DNNType]
+            s[2] = GPUEstimatedTimeW[DNNType]
+            s[3] = GPUEstimatedTimeC[DNNType]
             s[4] = pCONV
             s[5] = pPOOL
             s[6] = pFC
@@ -407,8 +408,9 @@ for i in range(10):
             获取reward的代码
             '''
             energy = [CPUEnergyW[DNNType], CPUEnergyC[DNNType], GPUEnergyW[DNNType], GPUEnergyC[DNNType]]
+            times=[CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType]]
             # reward = greedy_reward(s[action], energy[action], flag, inTime, QoS, ph_idle, gama, alpha, beta)
-            c_time = s[action]
+            c_time = times[action]
             e_consumption = energy[action]
             reward = get_reward(activated_server_racks, processing_request, request_id, c_time,
                                 e_consumption, outTime, inTime,QoS)

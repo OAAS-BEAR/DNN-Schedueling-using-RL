@@ -17,6 +17,10 @@ https://github.com/Azure/AzurePublicDataset/blob/master/AzureTracesForPacking202
 '''
 training DRL
 '''
+CPUEstimatedTimeW = [0.132363007, 0.173105368, 0.249502095, 0.432562235, 0.357732699, 0.064204907, 0.009701998]  # the estimated computing time on the CPU in the warm water area
+CPUEstimatedTimeC = [0.126060006, 0.164862255, 0.237621043, 0.288374823, 0.238488466, 0.061147531, 0.009239998]  # the estimated computing time on the CPU in the cold water area
+GPUEstimatedTimeW = [0.02679637, 0.040371812, 0.037578119, 0.027756197, 0.04698367, 0.00807134, 0.024438761]  # the estimated computing time on the GPU in the warm water area
+GPUEstimatedTimeC = [0.025520352, 0.038449345, 0.035788685, 0.023130165, 0.039153059, 0.007686991, 0.02327501]  # the estimated computing time on the GPU in the cold water area
 
 # there are 7 DNN models in total
 # ResNetV1-50, EfficientNet-B1, EfficientNet-B3, Unet, YoloV3-spp, YoloV3-tiny, and NER
@@ -223,7 +227,6 @@ def request_add_item(request_id, computing_time, energy_consumption, finish_time
     确定采取某动作后，计算自身的IT和cooling能耗，更新processing_request
     """
     c_action = processing_request[request_id][0]
-    assert (computing_time <= qos)
     request_num = math.floor((finish_time - start_time) / qos)
     e_self_it = (energy_consumption + idle_power[c_action] * (qos - computing_time)) * request_num + (
             finish_time - start_time - qos * request_num) * idle_power[c_action]
@@ -292,10 +295,10 @@ for i in range(10):
             E_Cooling += E2
             QoS_satisfy.append(Q)
         else:  # 某一请求开始，更改state，然后run DQN
-            s[0] = CPURealTimeW[DNNType]
-            s[1] = CPURealTimeC[DNNType]
-            s[2] = GPURealTimeW[DNNType]
-            s[3] = GPURealTimeC[DNNType]
+            s[0] = CPUEstimatedTimeW[DNNType]
+            s[1] = CPUEstimatedTimeC[DNNType]
+            s[2] = GPUEstimatedTimeW[DNNType]
+            s[3] = GPUEstimatedTimeC[DNNType]
             s[4] = pCONV
             s[5] = pPOOL
             s[6] = pFC
@@ -330,7 +333,9 @@ for i in range(10):
             #     index = np.random.randint(0,len(rewards))
             # action = index
 
-            c_time = s[action]
+            times = [CPURealTimeW[DNNType], CPURealTimeC[DNNType], GPURealTimeW[DNNType], GPURealTimeC[DNNType]]
+            # reward = greedy_reward(s[action], energy[action], flag, inTime, QoS, ph_idle, gama, alpha, beta)
+            c_time = times[action]
             e_consumption = energy[action]
             # 获取新的state,即更改hardwareNumber
             s_ = act(request_id, action, s, activated_server_racks, processing_request, M, outTime,
