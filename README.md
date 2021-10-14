@@ -13,7 +13,7 @@ The research group consists of [Prof. Fangming Liu](http://faculty.hust.edu.cn/l
 
 The main contribution of our work:
 
-1. According to our knowledge,we are the first to leverage Deep Reinforcement Learning to develop DNN inference scheduling algorithm.
+1. According to our knowledge,we are the first to leverage Deep Reinforcement Learning to develop energy-efficient DNN inference scheduling algorithm.
 
 2. We designed approriate State, action, and reward function, environment for  reinforcement learning scheduling algorithm
 
