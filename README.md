@@ -8,6 +8,7 @@
 
 ## background
 This is a research project on Deep Network Inference Scheduling Algorithm , conducted by a research group of the [Laboratory of service computing technology and systems, Ministry of Education](http://grid.hust.edu.cn/kydw/gdyjry.htm).
+The research group consists of Prof.Fangming Liu, Qingyu Pei, Qunli Li(research intern), Dawei zhou(research intern)
 
 
 ## environment
