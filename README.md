@@ -20,7 +20,7 @@ The main contribution of our work:
 
 
 ## usage
-trian deep DRL model and evaluate model performance on test data
+trian deep DRL model and evaluate model performance on task of DNN inference scheduling
   ```
   python DRLtraing.py -d  #using Deep Q learning as the underlying DRL algorithm
   
