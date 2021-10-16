@@ -1,7 +1,6 @@
 ## Table of Contents
 
 - [Background](#background)
-- [Environment install](#environment)
 - [Usage](#usage)
 - [Contributing](#contributer)
 - [Reference](#reference)
@@ -20,10 +19,19 @@ The main contribution of our work:
 3. Our scheduling algorithm significantly outperforms traditional greedy-based  DNN inference scheduling  by 10 percent on average, in terms of energy efficiency.
 
 
-## environment
-
 ## usage
- 
+trian deep DRL model and evaluate model performance on test data
+  ```
+  python DRLtraing.py -d  #using Deep Q learning as the underlying DRL algorithm
+  
+  python DRLtraing.py  #using Double Deep Q learning as the underlying DRL algorithm
+  
+  ```
+evaluate greedy-based DNN inference scheduling 
+
+```
+   python greedy.py
+```
 
 
 ## contributer
